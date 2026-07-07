@@ -1,0 +1,93 @@
+# AllPics — Task Checklist
+
+> Living checklist. Updated at every phase. Never mark a task done unless verified.
+
+## Phase 0 — Provisioning (user-assisted)
+- [ ] Create Supabase project (note project ref, anon key, service role key)
+- [ ] Install Supabase CLI (`scoop install supabase` or `npm i -g supabase`)
+- [ ] Create Firebase project + Android & iOS apps (FCM, Analytics, Crashlytics)
+- [ ] Create Razorpay test account (key id + secret + webhook secret)
+- [ ] Fill `.env` files from templates
+
+## Phase 1 — Foundation
+- [x] Monorepo structure (`app/`, `supabase/`, `worker/`, `docs/`)
+- [x] Documentation set (README, PLAN, ARCHITECTURE, DATABASE, API, DEPLOYMENT, SECURITY, CHANGELOG)
+- [x] Database migrations: schema + triggers + RLS + seed plans
+- [x] Flutter app scaffold (Material 3, dark/light theme, typography, glass components)
+- [x] Core: router (go_router), DI (Riverpod), errors, constants, env config
+- [x] Shared widgets: buttons, cards, loading/empty/error states, shimmer
+- [x] `flutter analyze` clean
+- [x] `flutter test` green
+
+## Phase 2 — Auth
+- [ ] Host sign-up / sign-in (email + password)
+- [ ] Google sign-in
+- [ ] Profile auto-creation trigger
+- [ ] Guest anonymous auth + join flow (name, optional phone)
+- [ ] Session persistence + splash routing
+
+## Phase 3 — Events
+- [ ] Create event wizard (type, title, description, date, location, cover)
+- [ ] Unique event code + QR + share link
+- [ ] Host dashboard with live counters
+- [ ] Event settings / edit / delete
+
+## Phase 4 — Uploads
+- [ ] Signed upload URL Edge Function (quota, mime, size, rate limit)
+- [ ] Guest multi-select upload with progress
+- [ ] Retry failed uploads, offline queue
+- [ ] Quota exceeded UX
+
+## Phase 5 — Album
+- [ ] Grid gallery + thumbnails
+- [ ] Full-screen viewer (pinch zoom, swipe)
+- [ ] Favorites, sort, search
+- [ ] Download single / all
+- [ ] Realtime album updates
+
+## Phase 6 — Payments
+- [ ] Plans screen
+- [ ] Razorpay checkout (order Edge Function)
+- [ ] Webhook: verify signature, apply plan idempotently
+- [ ] Invoice generation + payment history
+
+## Phase 7 — Notifications
+- [ ] FCM token registration
+- [ ] Notification fan-out Edge Function
+- [ ] Triggers: guest joined, new uploads, expiring, storage full, payment success
+- [ ] In-app notification center
+
+## Phase 8 — AI Worker
+- [ ] FastAPI worker + job queue consumer
+- [ ] Duplicate detection (perceptual hash, keep best)
+- [ ] Blur detection (Laplacian variance)
+- [ ] Enhancement (brightness/contrast/sharpen/denoise)
+- [ ] Highlights album generation
+- [ ] Slideshow generation (ffmpeg)
+- [ ] Dockerfile + deploy docs
+
+## Phase 9 — Admin Panel (Flutter Web)
+- [ ] Role-gated admin routes
+- [ ] Users, events, payments management
+- [ ] Analytics + storage usage
+- [ ] Ban users, delete events, feature flags
+
+## Phase 10 — Settings & Polish
+- [ ] Profile, notification prefs, theme toggle
+- [ ] i18n (en, hi)
+- [ ] Delete account, privacy screens
+- [ ] Micro-animation pass
+
+## Phase 11 — Testing Hardening
+- [ ] Unit tests (repositories, notifiers)
+- [ ] Widget tests (all screens)
+- [ ] Integration test: host → event → guest join → upload → album
+- [ ] Worker pytest suite
+- [ ] RLS assertion tests
+
+## Phase 12 — Deployment
+- [ ] Android signing + Play config
+- [ ] iOS entitlements + Universal Links
+- [ ] Dev/prod flavors
+- [ ] CI/CD (GitHub Actions)
+- [ ] Store metadata

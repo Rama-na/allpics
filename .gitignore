@@ -1,0 +1,23 @@
+# Root ignores for the AllPics monorepo.
+
+# Environment / secrets — never commit real credentials
+app/env/*.json
+!app/env/env.example.json
+**/.env
+**/.env.*
+supabase/.temp/
+supabase/.branches/
+
+# Firebase config (added per-developer in Phase 7)
+app/android/app/google-services.json
+app/ios/Runner/GoogleService-Info.plist
+
+# Python worker
+worker/.venv/
+worker/__pycache__/
+worker/**/__pycache__/
+worker/.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
