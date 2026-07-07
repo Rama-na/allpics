@@ -4,6 +4,14 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.11.0] — 2026-07-07 · Phase 11: Testing Hardening
+
+### Added
+- Full-journey end-to-end test: onboarding → host sign-up → event creation → QR dashboard → sign-out → guest join by code → uploads with retry → live album updates → favorite round-trip — exercising every feature layer in one flow.
+- Unit coverage for the persistence and infrastructure seams: `UploadTask` serialization (restore-as-queued semantics, in-memory tasks excluded by design), `UploadQueueStore` (pending-only persistence, corrupt-data recovery), `GoRouterRefreshStream`, `AlbumItem` parsing, and user-safe `AppException` message guarantees.
+- `supabase/tests/verify_schema.sql`: post-migration verification — RLS enabled on all 13 tables, critical policies and functions present, plan seeds landed, buckets exist and are private. Fails loudly for CI/deploy gates.
+- Suite totals: 98 Flutter tests + 22 worker tests, analyzer clean.
+
 ## [0.10.0] — 2026-07-07 · Phase 10: Settings
 
 ### Added

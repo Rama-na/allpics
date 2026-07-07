@@ -80,11 +80,11 @@
 - [x] Micro-animation pass (button/loading transitions, page transitions, splash/onboarding animations, badge)
 
 ## Phase 11 — Testing Hardening
-- [ ] Unit tests (repositories, notifiers)
-- [ ] Widget tests (all screens)
-- [ ] Integration test: host → event → guest join → upload → album
-- [ ] Worker pytest suite
-- [ ] RLS assertion tests
+- [x] Unit tests (repositories, notifiers)
+- [x] Widget tests (all screens)
+- [x] Integration test: host → event → guest join → upload → album
+- [x] Worker pytest suite
+- [x] RLS assertion tests (supabase/tests/verify_schema.sql — run post-migration)
 
 ## Phase 12 — Deployment
 - [ ] Android signing + Play config
