@@ -46,10 +46,11 @@
 - [x] Realtime album updates
 
 ## Phase 6 — Payments
-- [ ] Plans screen
-- [ ] Razorpay checkout (order Edge Function)
-- [ ] Webhook: verify signature, apply plan idempotently
-- [ ] Invoice generation + payment history
+- [x] Plans screen
+- [x] Razorpay checkout (order Edge Function)
+- [x] Webhook: verify signature, apply plan idempotently
+- [x] Invoice generation + payment history
+  - Note: invoice number issued by webhook; PDF export lands with the worker (Phase 8)
 
 ## Phase 7 — Notifications
 - [ ] FCM token registration

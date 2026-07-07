@@ -15,6 +15,8 @@ import '../../features/guest/presentation/join_event_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
+import '../../features/payments/presentation/payment_history_screen.dart';
+import '../../features/payments/presentation/plans_screen.dart';
 import '../config/app_env.dart';
 import 'go_router_refresh_stream.dart';
 
@@ -33,6 +35,8 @@ abstract final class AppRoute {
   static const editEvent = 'editEvent';
   static const album = 'album';
   static const mediaViewer = 'mediaViewer';
+  static const plans = 'plans';
+  static const paymentHistory = 'paymentHistory';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -57,7 +61,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Host-only areas once a backend exists. In unconfigured mode the
       // shell stays reachable so UI development and tests never block.
-      final hostOnly = loc == '/home' || loc.startsWith('/events');
+      final hostOnly = loc == '/home' ||
+          loc.startsWith('/events') ||
+          loc.startsWith('/payments');
       if (hostOnly && AppEnv.isSupabaseConfigured && !isHost) {
         return '/signin';
       }
@@ -124,6 +130,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoute.editEvent,
         builder: (context, state) =>
             CreateEventScreen(existing: state.extra as Event?),
+      ),
+      GoRoute(
+        path: '/events/:eventId/upgrade',
+        name: AppRoute.plans,
+        builder: (context, state) =>
+            PlansScreen(eventId: state.pathParameters['eventId']!),
+      ),
+      GoRoute(
+        path: '/payments',
+        name: AppRoute.paymentHistory,
+        builder: (context, state) => const PaymentHistoryScreen(),
       ),
       // Album is member-visible (host OR guest) — not under /events guard.
       GoRoute(

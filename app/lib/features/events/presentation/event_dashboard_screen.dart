@@ -212,6 +212,16 @@ class EventDashboardScreen extends ConsumerWidget {
                       icon: const Icon(Icons.photo_library_rounded, size: 18),
                       label: const Text('View album'),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed(
+                        AppRoute.plans,
+                        pathParameters: {'eventId': event.id},
+                      ),
+                      icon: const Icon(Icons.workspace_premium_rounded,
+                          size: 18),
+                      label: const Text('Upgrade plan'),
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     QrShareCard(event: event),
                     if (event.description.isNotEmpty) ...[

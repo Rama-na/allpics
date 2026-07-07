@@ -27,6 +27,12 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           if (user != null)
             IconButton(
+              tooltip: 'Payment history',
+              icon: const Icon(Icons.receipt_long_outlined),
+              onPressed: () => context.pushNamed(AppRoute.paymentHistory),
+            ),
+          if (user != null)
+            IconButton(
               tooltip: 'Sign out',
               icon: const Icon(Icons.logout_rounded),
               onPressed: () =>

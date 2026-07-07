@@ -10,6 +10,8 @@ import 'package:allpics/features/events/domain/event.dart';
 import 'package:allpics/features/events/domain/events_repository.dart';
 import 'package:allpics/features/guest/domain/join_repository.dart';
 import 'package:allpics/features/guest/domain/joinable_event.dart';
+import 'package:allpics/features/payments/domain/payment_models.dart';
+import 'package:allpics/features/payments/domain/payments_repository.dart';
 import 'package:allpics/features/uploads/domain/uploads_repository.dart';
 
 /// In-memory [AuthRepository] for widget/unit tests.
@@ -421,5 +423,60 @@ class FakeAlbumRepository implements AlbumRepository {
   void dispose() {
     _itemsController.close();
     _favController.close();
+  }
+}
+
+/// In-memory [PaymentsRepository].
+class FakePaymentsRepository implements PaymentsRepository {
+  bool failOrders = false;
+  final orders = <(String eventId, String planCode)>[];
+  List<Payment> history = [];
+
+  static const plans = [
+    Plan(id: 'p0', code: 'free', name: 'Free', priceInr: 0, photoLimit: 10, storageDays: 30, sortOrder: 0),
+    Plan(id: 'p1', code: 'basic', name: 'Basic', priceInr: 15900, photoLimit: 100, storageDays: 30, sortOrder: 1),
+    Plan(id: 'p2', code: 'plus', name: 'Plus', priceInr: 29900, photoLimit: 500, storageDays: 30, sortOrder: 2),
+    Plan(id: 'p3', code: 'premium', name: 'Premium', priceInr: 59900, photoLimit: 1000, storageDays: 180, sortOrder: 3),
+  ];
+
+  @override
+  Future<List<Plan>> fetchPlans() async => plans;
+
+  @override
+  Future<RazorpayOrder> createOrder({
+    required String eventId,
+    required String planCode,
+  }) async {
+    if (failOrders) {
+      throw const ValidationException('Could not start the payment.');
+    }
+    orders.add((eventId, planCode));
+    final plan = plans.firstWhere((p) => p.code == planCode);
+    return RazorpayOrder(
+      orderId: 'order_${orders.length}',
+      amountInr: plan.priceInr,
+      currency: 'INR',
+      keyId: 'rzp_test_key',
+      planName: plan.name,
+      eventTitle: 'Goa Trip',
+    );
+  }
+
+  @override
+  Future<List<Payment>> fetchPayments() async => history;
+}
+
+/// Scriptable [CheckoutGateway] — succeeds, fails, or cancels on demand.
+class FakeCheckoutGateway implements CheckoutGateway {
+  CheckoutResult next = const CheckoutResult.success('pay_1');
+  final opened = <RazorpayOrder>[];
+
+  @override
+  Future<CheckoutResult> openCheckout({
+    required RazorpayOrder order,
+    String? prefillEmail,
+  }) async {
+    opened.add(order);
+    return next;
   }
 }

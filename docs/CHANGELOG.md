@@ -4,6 +4,16 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-07-07 · Phase 6: Payments
+
+### Added
+- `razorpay-order` Edge Function: host-ownership + plan validation, server-side Razorpay order creation (secret never leaves the server; the public key id is returned per-order so no client config is needed), `payments` lifecycle row.
+- `razorpay-webhook` Edge Function: constant-time HMAC-SHA256 signature verification, idempotent capture handling, instant event upgrade (new quota + expiry from plan, expired events revive), invoice number issuance, failure recording.
+- Plans screen: catalog with current-plan highlight, per-plan checkout via a `CheckoutGateway` abstraction wrapping razorpay_flutter (test- and platform-substitutable), success/cancel/failure states.
+- Payment history screen with invoice numbers and a detail dialog; entry points on home and the event dashboard.
+- Pre-provisioning behavior: plan catalog renders from static seed copy; purchases fail with a clear message until Razorpay env vars are set — fully modular for later credential drop-in.
+- 10 new tests (70 total): model parsing and full checkout widget flows (success, cancel, order failure, history).
+
 ## [0.5.0] — 2026-07-07 · Phase 5: Album
 
 ### Added
