@@ -87,8 +87,9 @@
 - [x] RLS assertion tests (supabase/tests/verify_schema.sql — run post-migration)
 
 ## Phase 12 — Deployment
-- [ ] Android signing + Play config
-- [ ] iOS entitlements + Universal Links
-- [ ] Dev/prod flavors
-- [ ] CI/CD (GitHub Actions)
-- [ ] Store metadata
+- [x] Android signing + Play config (key.properties flow, R8 + Razorpay keep rules, App Links intent filter)
+- [x] iOS entitlements + Universal Links (Runner.entitlements, usage descriptions)
+- [x] Dev/prod flavors (via --dart-define-from-file env json)
+- [x] CI/CD (GitHub Actions: ci.yml analyze/test/web-build/pytest/docker/migrations-verify; release.yml signed .aab)
+- [x] Store metadata (docs/DEPLOYMENT.md § Store Listing)
+- [x] Release build verified (flutter build web --release)

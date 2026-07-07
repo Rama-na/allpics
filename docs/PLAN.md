@@ -26,19 +26,19 @@ Weddings · Birthdays · Baby Showers · College Farewells · Trips · Family Fu
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| 0 | Provisioning: Supabase, Firebase, Razorpay accounts + env files | pending (user-assisted) |
+| 0 | Provisioning: Supabase, Firebase, Razorpay accounts + env files | pending (user-assisted — credentials to be provided) |
 | 1 | Foundation: docs, monorepo, DB schema + RLS, Flutter skeleton + design system | **done** |
-| 2 | Auth: host email/Google sign-in, guest anonymous join | pending |
-| 3 | Events: creation wizard, event code + QR + share link, realtime dashboard | pending |
-| 4 | Uploads: signed URLs, progress, retry, offline queue | pending |
-| 5 | Album: gallery, viewer, favorites, sort/search, downloads, live updates | pending |
-| 6 | Payments: Razorpay checkout, webhook quota updates, invoices | pending |
-| 7 | Notifications: FCM fan-out + in-app center | pending |
-| 8 | AI worker: dedupe, blur, enhance, highlights, slideshow | pending |
-| 9 | Admin panel (Flutter web) | pending |
-| 10 | Settings, i18n, polish | pending |
-| 11 | Testing hardening | pending |
-| 12 | Deployment: signing, CI/CD, store metadata | pending |
+| 2 | Auth: host email/Google sign-in, guest anonymous join | **done** |
+| 3 | Events: creation wizard, event code + QR + share link, realtime dashboard | **done** |
+| 4 | Uploads: signed URLs, progress, retry, offline queue | **done** |
+| 5 | Album: gallery, viewer, favorites, sort/search, downloads, live updates | **done** |
+| 6 | Payments: Razorpay checkout, webhook quota updates, invoices | **done** |
+| 7 | Notifications: FCM fan-out + in-app center | **done** |
+| 8 | AI worker: dedupe, blur, enhance, highlights, slideshow | **done** |
+| 9 | Admin panel (Flutter web) | **done** |
+| 10 | Settings, polish (English-only) | **done** |
+| 11 | Testing hardening | **done** |
+| 12 | Deployment: signing, CI/CD, store metadata | **done** |
 
 ## Per-Phase Quality Gates
 1. `flutter analyze` — zero issues

@@ -1,0 +1,9 @@
+# AllPics release keystore configuration.
+# 1. Generate a keystore:
+#    keytool -genkey -v -keystore allpics-release.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias allpics
+# 2. Copy this file to android/key.properties and fill the values.
+# 3. NEVER commit key.properties or the keystore (both are gitignored).
+storeFile=../allpics-release.keystore
+storePassword=CHANGE_ME
+keyAlias=allpics
+keyPassword=CHANGE_ME

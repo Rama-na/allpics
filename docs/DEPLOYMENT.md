@@ -65,6 +65,97 @@ flutter build web --release --dart-define-from-file=env/prod.json         # Admi
 
 Phase 12 adds: Android keystore + Play Console setup, iOS signing + Universal Links entitlements, dev/prod flavors, CI/CD via GitHub Actions, and store listing metadata.
 
+## Release Builds
+
+### Android
+1. Generate a keystore and configure signing:
+   ```sh
+   keytool -genkey -v -keystore app/android/allpics-release.keystore \
+     -keyalg RSA -keysize 2048 -validity 10000 -alias allpics
+   cp app/android/key.properties.example app/android/key.properties  # fill values
+   ```
+   `build.gradle.kts` picks up `key.properties` automatically (falls back to
+   debug signing when absent so release builds never block). R8 minification
+   + Razorpay keep rules are pre-configured.
+2. Build:
+   ```sh
+   cd app
+   flutter build appbundle --release --dart-define-from-file=env/prod.json
+   ```
+3. Upload `build/app/outputs/bundle/release/app-release.aab` to Play Console
+   (app id `com.allpics.allpics`).
+4. App Links: host `/.well-known/assetlinks.json` on `allpics.app` with the
+   release SHA-256 fingerprint so QR links open the app directly.
+
+### iOS (requires macOS + Xcode)
+1. Open `app/ios/Runner.xcworkspace`; set the team; the bundle id is
+   `com.allpics.allpics`.
+2. Enable the **Associated Domains** capability — `Runner.entitlements`
+   already declares `applinks:allpics.app`; host
+   `/.well-known/apple-app-site-association` on the domain.
+3. Photo/camera/microphone usage descriptions are pre-filled in `Info.plist`.
+4. Build: `flutter build ipa --release --dart-define-from-file=env/prod.json`
+   and upload with Transporter / `xcrun altool`.
+
+### Admin panel (web)
+```sh
+cd app && flutter build web --release --dart-define-from-file=env/prod.json
+```
+Deploy `build/web/` to any static host (Supabase Hosting, Netlify, Vercel).
+
+## CI/CD
+
+- `.github/workflows/ci.yml` — on every push/PR: `flutter analyze` + full
+  test suite + web build; worker pytest + Docker build; Supabase migrations
+  applied to a disposable stack and verified with
+  `supabase/tests/verify_schema.sql`.
+- `.github/workflows/release.yml` — manual dispatch; produces a signed
+  `.aab` using repo secrets `ANDROID_KEYSTORE_BASE64`,
+  `ANDROID_KEY_PROPERTIES`, and `PROD_ENV_JSON`.
+
+## Scheduled Functions
+
+After `supabase functions deploy`, register the schedules (Dashboard →
+Edge Functions → Schedules, or `supabase functions schedule`):
+
+| Function | Schedule | Purpose |
+|---|---|---|
+| `event-expiry` | `0 1 * * *` (daily) | expiry sweep + T-3d warnings |
+| `send-notification` | `* * * * *` (per minute) | FCM push fan-out |
+
+Both require the service-role key as the Bearer token (configure the
+schedule's Authorization header accordingly).
+
+## Store Listing (copy-ready)
+
+- **Name:** AllPics — Every Photo. One Album.
+- **Short description:** Collect every guest's photos with one QR code.
+- **Full description:** AllPics gives your wedding, birthday, trip, or
+  corporate event a single shared album. Create an event, show the QR code,
+  and every guest can add their photos and videos instantly — no app
+  download or account required for guests. Watch the album grow live,
+  favorite the best shots, download everything, and let AllPics remove
+  duplicates and pick highlights automatically. Plans from free (10 photos)
+  to Premium (1000 photos, 6-month storage). Guests always upload free.
+- **Category:** Photography · **Content rating:** Everyone
+- **Privacy policy URL:** https://allpics.app/privacy
+
+## When Credentials Arrive (drop-in checklist)
+
+1. **Supabase**: fill `app/env/dev.json` + `env/prod.json`; then
+   `supabase link --project-ref <REF> && supabase db push && supabase functions deploy`;
+   enable anonymous sign-ins; run `tests/verify_schema.sql` against the
+   project; seed plans via `seed.sql`.
+2. **Razorpay**: `supabase secrets set RAZORPAY_KEY_ID=… RAZORPAY_KEY_SECRET=… RAZORPAY_WEBHOOK_SECRET=…`;
+   add the webhook endpoint (`payment.captured`, `payment.failed`).
+3. **Firebase**: drop `google-services.json` + `GoogleService-Info.plist`
+   into the app; add `firebase_messaging` and implement
+   `FirebasePushGateway` behind the existing `PushGateway` interface
+   (single provider swap in `notifications/providers.dart`); set
+   `FCM_SERVICE_ACCOUNT_JSON` secret for server push.
+4. **Worker**: deploy the container with `SUPABASE_URL` +
+   `SUPABASE_SERVICE_ROLE_KEY`.
+
 ## AI Worker (Phase 8)
 
 ```sh

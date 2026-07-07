@@ -22,4 +22,7 @@ worker/.pytest_cache/
 .DS_Store
 Thumbs.db
 
-worker/.venv/
+# Android release signing — never commit
+app/android/key.properties
+app/android/*.keystore
+app/android/*.jks

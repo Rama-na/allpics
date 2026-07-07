@@ -4,6 +4,16 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [1.0.0-rc.1] — 2026-07-07 · Phase 12: Deployment
+
+### Added
+- Android release configuration: `key.properties` signing flow (safe debug fallback), R8 minification with Razorpay keep rules, minSdk 23, App Links intent filter for `allpics.app/j/*`, INTERNET permission, proper app label.
+- iOS release configuration: `Runner.entitlements` with Universal Links, photo/camera/microphone usage descriptions, display name.
+- CI (`ci.yml`): Flutter analyze + tests + release web build, worker pytest + Docker build, Supabase migrations applied to a disposable stack and verified with the schema assertion script.
+- Release workflow (`release.yml`): manual signed `.aab` build from repo secrets.
+- docs/DEPLOYMENT.md: full release runbook — Android/iOS/web builds, scheduled-function registration, copy-ready store listing, and the credentials drop-in checklist.
+- Verified: 98 Flutter tests + 22 worker tests green, `flutter build web --release` succeeds.
+
 ## [0.11.0] — 2026-07-07 · Phase 11: Testing Hardening
 
 ### Added
