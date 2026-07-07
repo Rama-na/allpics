@@ -4,6 +4,17 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-07-07 · Phase 5: Album
+
+### Added
+- Album feature (host + guest): live grid gallery driven by Supabase Realtime with uploader-name resolution and signed-URL previews.
+- Full-screen viewer: swipe between items (PageView), pinch-to-zoom photos (InteractiveViewer), in-app video playback with scrubbing (video_player), caption + uploader + timestamp overlay.
+- Favorites: toggle from the viewer, live favorites stream, Favourites filter chip.
+- Sort (newest / oldest / by guest), media filters (all / photos / videos / favourites), and search across guest names and captions.
+- Downloads: single item and batch "download all" via the native share sheet.
+- Routes `/album/:eventId` and `/album/:eventId/view` (member-visible, not host-guarded); entry buttons on the host dashboard and guest event screen.
+- 11 new tests (60 total): view-state unit coverage and full widget flows (live updates, search, viewer swipe, favorite round-trip, empty state).
+
 ## [0.4.0] — 2026-07-07 · Phase 4: Uploads
 
 ### Added

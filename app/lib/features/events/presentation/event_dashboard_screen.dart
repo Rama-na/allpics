@@ -204,6 +204,15 @@ class EventDashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    FilledButton.icon(
+                      onPressed: () => context.pushNamed(
+                        AppRoute.album,
+                        pathParameters: {'eventId': event.id},
+                      ),
+                      icon: const Icon(Icons.photo_library_rounded, size: 18),
+                      label: const Text('View album'),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     QrShareCard(event: event),
                     if (event.description.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.md),

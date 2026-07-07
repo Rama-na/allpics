@@ -70,6 +70,15 @@ class GuestEventScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   EventPreviewCard(event: state.event),
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton.icon(
+                    onPressed: () => context.pushNamed(
+                      AppRoute.album,
+                      pathParameters: {'eventId': state.event.id},
+                    ),
+                    icon: const Icon(Icons.photo_library_outlined, size: 18),
+                    label: const Text('View album'),
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   UploadPanel(
                     eventId: state.event.id,

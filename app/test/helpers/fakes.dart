@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:allpics/core/errors/app_exception.dart';
+import 'package:allpics/features/album/domain/album_item.dart';
+import 'package:allpics/features/album/domain/album_repository.dart';
 import 'package:allpics/features/auth/domain/auth_repository.dart';
 import 'package:allpics/features/auth/domain/auth_user.dart';
 import 'package:allpics/features/events/domain/event.dart';
@@ -353,5 +355,71 @@ class FakeUploadsRepository implements UploadsRepository {
   @override
   Future<void> confirmUploaded(String uploadId) async {
     confirmed.add(uploadId);
+  }
+}
+
+/// In-memory [AlbumRepository] with live favorite toggling.
+class FakeAlbumRepository implements AlbumRepository {
+  FakeAlbumRepository({List<AlbumItem>? items}) : _items = items ?? [];
+
+  final List<AlbumItem> _items;
+  final _itemsController = StreamController<List<AlbumItem>>.broadcast();
+  final _favorites = <String>{};
+  final _favController = StreamController<Set<String>>.broadcast();
+
+  static AlbumItem buildItem({
+    required String id,
+    String eventId = 'event-1',
+    String guestName = 'Anita',
+    bool isVideo = false,
+    String caption = '',
+    DateTime? createdAt,
+  }) =>
+      AlbumItem(
+        id: id,
+        eventId: eventId,
+        guestId: 'guest-$guestName',
+        guestName: guestName,
+        isVideo: isVideo,
+        storagePath: 'media/$eventId/$id.jpg',
+        caption: caption,
+        createdAt: createdAt ?? DateTime(2026, 7, 1),
+      );
+
+  void addItem(AlbumItem item) {
+    _items.add(item);
+    _itemsController.add(List.of(_items));
+  }
+
+  @override
+  Stream<List<AlbumItem>> watchAlbum(String eventId) async* {
+    yield _items.where((i) => i.eventId == eventId).toList();
+    yield* _itemsController.stream
+        .map((all) => all.where((i) => i.eventId == eventId).toList());
+  }
+
+  @override
+  Stream<Set<String>> watchFavoriteIds() async* {
+    yield Set.of(_favorites);
+    yield* _favController.stream;
+  }
+
+  @override
+  Future<void> setFavorite(String uploadId, bool favorite) async {
+    favorite ? _favorites.add(uploadId) : _favorites.remove(uploadId);
+    _favController.add(Set.of(_favorites));
+  }
+
+  @override
+  Future<String> signedMediaUrl(String path) async =>
+      'https://example.com/$path';
+
+  @override
+  Future<Uint8List> downloadBytes(String path) async =>
+      Uint8List.fromList(List.filled(64, 1));
+
+  void dispose() {
+    _itemsController.close();
+    _favController.close();
   }
 }

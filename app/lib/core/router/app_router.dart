@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/auth/providers.dart';
+import '../../features/album/domain/album_item.dart';
+import '../../features/album/presentation/album_screen.dart';
+import '../../features/album/presentation/media_viewer_screen.dart';
 import '../../features/events/domain/event.dart';
 import '../../features/events/presentation/create_event_screen.dart';
 import '../../features/events/presentation/event_dashboard_screen.dart';
@@ -28,6 +31,8 @@ abstract final class AppRoute {
   static const createEvent = 'createEvent';
   static const eventDashboard = 'eventDashboard';
   static const editEvent = 'editEvent';
+  static const album = 'album';
+  static const mediaViewer = 'mediaViewer';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -119,6 +124,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoute.editEvent,
         builder: (context, state) =>
             CreateEventScreen(existing: state.extra as Event?),
+      ),
+      // Album is member-visible (host OR guest) — not under /events guard.
+      GoRoute(
+        path: '/album/:eventId',
+        name: AppRoute.album,
+        builder: (context, state) =>
+            AlbumScreen(eventId: state.pathParameters['eventId']!),
+      ),
+      GoRoute(
+        path: '/album/:eventId/view',
+        name: AppRoute.mediaViewer,
+        builder: (context, state) {
+          final args =
+              state.extra as ({List<AlbumItem> items, int initialIndex});
+          return MediaViewerScreen(
+            items: args.items,
+            initialIndex: args.initialIndex,
+          );
+        },
       ),
     ],
   );

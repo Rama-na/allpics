@@ -39,11 +39,11 @@
 - [x] Quota exceeded UX
 
 ## Phase 5 — Album
-- [ ] Grid gallery + thumbnails
-- [ ] Full-screen viewer (pinch zoom, swipe)
-- [ ] Favorites, sort, search
-- [ ] Download single / all
-- [ ] Realtime album updates
+- [x] Grid gallery + thumbnails
+- [x] Full-screen viewer (pinch zoom, swipe)
+- [x] Favorites, sort, search
+- [x] Download single / all
+- [x] Realtime album updates
 
 ## Phase 6 — Payments
 - [ ] Plans screen
