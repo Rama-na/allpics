@@ -8,6 +8,7 @@ import 'package:allpics/features/events/domain/event.dart';
 import 'package:allpics/features/events/domain/events_repository.dart';
 import 'package:allpics/features/guest/domain/join_repository.dart';
 import 'package:allpics/features/guest/domain/joinable_event.dart';
+import 'package:allpics/features/uploads/domain/uploads_repository.dart';
 
 /// In-memory [AuthRepository] for widget/unit tests.
 class FakeAuthRepository implements AuthRepository {
@@ -302,4 +303,55 @@ class FakeEventsRepository implements EventsRepository {
       'https://example.com/$coverPath';
 
   void dispose() => _listController.close();
+}
+
+/// In-memory [UploadsRepository] with scriptable failures.
+class FakeUploadsRepository implements UploadsRepository {
+  /// File names that should fail this many times before succeeding.
+  final failuresByFileName = <String, int>{};
+
+  /// When set, every slot request throws quota-exceeded.
+  bool quotaFull = false;
+
+  final confirmed = <String>[];
+  int slotCounter = 0;
+
+  @override
+  Future<UploadSlot> requestSlot({
+    required String eventId,
+    required String fileName,
+    required String mimeType,
+    required int bytes,
+  }) async {
+    if (quotaFull) throw const QuotaExceededException();
+    final remaining = failuresByFileName[fileName] ?? 0;
+    if (remaining > 0) {
+      failuresByFileName[fileName] = remaining - 1;
+      throw const NetworkException();
+    }
+    slotCounter++;
+    return UploadSlot(
+      uploadId: 'upload-$slotCounter',
+      storagePath: 'media/$eventId/upload-$slotCounter',
+      signedUrl: 'https://example.com/signed/$slotCounter',
+      token: 'token-$slotCounter',
+    );
+  }
+
+  @override
+  Future<void> uploadBytes({
+    required UploadSlot slot,
+    required Uint8List bytes,
+    required String mimeType,
+    void Function(double progress)? onProgress,
+  }) async {
+    onProgress?.call(0.5);
+    await Future<void>.delayed(Duration.zero);
+    onProgress?.call(1.0);
+  }
+
+  @override
+  Future<void> confirmUploaded(String uploadId) async {
+    confirmed.add(uploadId);
+  }
 }

@@ -26,6 +26,11 @@ dependencies:
   # Platform integrations
   share_plus: ^12.0.0
   image_picker: ^1.2.0
+  cross_file: ^0.3.4
+
+  # Networking + storage
+  http: ^1.6.0
+  shared_preferences: ^2.5.0
 
   # Utilities
   intl: any

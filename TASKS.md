@@ -33,10 +33,10 @@
 - [x] Event settings / edit / delete
 
 ## Phase 4 — Uploads
-- [ ] Signed upload URL Edge Function (quota, mime, size, rate limit)
-- [ ] Guest multi-select upload with progress
-- [ ] Retry failed uploads, offline queue
-- [ ] Quota exceeded UX
+- [x] Signed upload URL Edge Function (quota, mime, size, rate limit)
+- [x] Guest multi-select upload with progress
+- [x] Retry failed uploads, offline queue
+- [x] Quota exceeded UX
 
 ## Phase 5 — Album
 - [ ] Grid gallery + thumbnails

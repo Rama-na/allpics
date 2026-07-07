@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
+import '../../uploads/presentation/widgets/upload_panel.dart';
 import 'controllers/join_flow_controller.dart';
 import 'widgets/event_preview_card.dart';
 
-/// Guest landing after joining. Phase 4 adds the upload flow here; for now it
-/// confirms membership and shows live event details.
+/// Guest landing after joining: event details + the upload experience.
 class GuestEventScreen extends ConsumerWidget {
   const GuestEventScreen({super.key, required this.eventId});
 
@@ -43,7 +43,7 @@ class GuestEventScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 480),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -61,7 +61,7 @@ class GuestEventScreen extends ConsumerWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
-                            'You\'re in, ${state.guest.name}! Photo uploads open here next.',
+                            'You\'re in, ${state.guest.name}! Add your photos below.',
                             style: theme.textTheme.bodyMedium,
                           ),
                         ),
@@ -70,6 +70,11 @@ class GuestEventScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   EventPreviewCard(event: state.event),
+                  const SizedBox(height: AppSpacing.lg),
+                  UploadPanel(
+                    eventId: state.event.id,
+                    isFull: state.event.isFull,
+                  ),
                 ],
               ),
             ),

@@ -4,6 +4,16 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-07 · Phase 4: Uploads
+
+### Added
+- `create-upload-url` Edge Function: session check, guest membership + ban check, event active/expiry check, quota gate, mime whitelist (JPEG/PNG/WebP/HEIC + MP4/MOV/WebM), size caps (25 MB photo / 250 MB video), 30-per-minute per-guest rate limit, signed upload URL issuance with pending-row rollback on failure.
+- Upload queue: 3-way parallel worker pool with per-file byte-level progress (chunked PUT to signed URL), typed error mapping, retry single/all, clear completed.
+- Offline persistence: unfinished tasks survive app restarts (shared_preferences) and resume as queued.
+- Quota-full handling: blocking a full album stops the whole queue with clear messaging; unsupported file types surface as visible failures.
+- Guest event screen now hosts the full upload experience (multi-select via image_picker `pickMultipleMedia`).
+- 9 new tests (49 total): worker-pool unit coverage (success, retry, quota, unsupported, clear) and widget flows.
+
 ## [0.3.0] — 2026-07-07 · Phase 3: Events
 
 ### Added
