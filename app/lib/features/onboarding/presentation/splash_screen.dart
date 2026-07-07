@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../auth/providers.dart';
 
-/// Animated brand splash. Routes to onboarding after the intro animation.
-/// (Phase 2 adds session-aware routing: signed-in hosts skip to home.)
+/// Animated brand splash. Routes by session: signed-in hosts go straight to
+/// home; everyone else sees onboarding.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -32,7 +33,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _controller.forward();
 
     Future<void>.delayed(const Duration(milliseconds: 1600), () {
-      if (mounted) context.goNamed(AppRoute.onboarding);
+      if (!mounted) return;
+      final user = ref.read(authRepositoryProvider).currentUser;
+      if (user != null && user.isHost) {
+        context.goNamed(AppRoute.home);
+      } else {
+        context.goNamed(AppRoute.onboarding);
+      }
     });
   }
 

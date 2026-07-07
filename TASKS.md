@@ -20,11 +20,11 @@
 - [x] `flutter test` green
 
 ## Phase 2 — Auth
-- [ ] Host sign-up / sign-in (email + password)
-- [ ] Google sign-in
-- [ ] Profile auto-creation trigger
-- [ ] Guest anonymous auth + join flow (name, optional phone)
-- [ ] Session persistence + splash routing
+- [x] Host sign-up / sign-in (email + password)
+- [x] Google sign-in (via Supabase OAuth; enable provider in dashboard — live verify after Phase 0)
+- [x] Profile auto-creation trigger
+- [x] Guest anonymous auth + join flow (name, optional phone)
+- [x] Session persistence + splash routing
 
 ## Phase 3 — Events
 - [ ] Create event wizard (type, title, description, date, location, cover)

@@ -4,6 +4,20 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-07 · Phase 2: Auth
+
+### Added
+- Host authentication: email/password sign-in + sign-up, Google OAuth (Supabase provider), friendly error mapping, session persistence.
+- Guest join flow: event code / QR deep link (`/j/<code>`) → event preview → name + optional phone → anonymous-auth join (idempotent re-join).
+- Session-aware routing: splash routes by session, go_router redirects (hosts skip auth pages; home is host-only once backend is configured), auth-state refresh stream.
+- Clean-architecture auth + guest features: repository interfaces, Supabase implementations, unconfigured fallbacks, Riverpod controllers.
+- Shared `AppTextField`; form validators (email, password, name, phone, event code).
+- Home shows the signed-in host and working sign-out.
+- 19 new tests (31 total): controller units, validators, full sign-in/sign-up/join widget flows with fakes.
+
+### Fixed
+- `AppButton` and sign-in footer overflow on narrow screens.
+
 ## [0.1.0] — 2026-07-07 · Phase 1: Foundation
 
 ### Added

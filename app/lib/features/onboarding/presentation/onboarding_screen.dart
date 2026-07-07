@@ -56,7 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeOutCubic,
       );
     } else {
-      context.goNamed(AppRoute.home);
+      context.goNamed(AppRoute.signIn);
     }
   }
 
@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: TextButton(
-                  onPressed: () => context.goNamed(AppRoute.home),
+                  onPressed: () => context.goNamed(AppRoute.signIn),
                   child: const Text('Skip'),
                 ),
               ),

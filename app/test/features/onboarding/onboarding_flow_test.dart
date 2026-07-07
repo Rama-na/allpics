@@ -1,6 +1,6 @@
 import 'package:allpics/app.dart';
 import 'package:allpics/core/router/app_router.dart';
-import 'package:allpics/features/home/presentation/home_screen.dart';
+import 'package:allpics/features/auth/presentation/sign_in_screen.dart';
 import 'package:allpics/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:allpics/features/onboarding/presentation/splash_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +21,7 @@ void main() {
     expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 
-  testWidgets('onboarding pages advance and land on home', (tester) async {
+  testWidgets('onboarding pages advance and land on sign-in', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: AllPicsApp()));
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle();
@@ -38,22 +38,31 @@ void main() {
 
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
-    expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('No events yet'), findsOneWidget);
+    expect(find.byType(SignInScreen), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
   });
 
-  testWidgets('skip jumps straight to home', (tester) async {
+  testWidgets('skip jumps straight to sign-in', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: AllPicsApp()));
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Skip'));
     await tester.pumpAndSettle();
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(SignInScreen), findsOneWidget);
   });
 
   test('route names are unique', () {
-    const names = [AppRoute.splash, AppRoute.onboarding, AppRoute.home];
+    const names = [
+      AppRoute.splash,
+      AppRoute.onboarding,
+      AppRoute.signIn,
+      AppRoute.signUp,
+      AppRoute.join,
+      AppRoute.joinDeepLink,
+      AppRoute.guestEvent,
+      AppRoute.home,
+    ];
     expect(names.toSet().length, names.length);
   });
 }

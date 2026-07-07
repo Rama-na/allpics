@@ -4,16 +4,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_env.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
+import '../../auth/presentation/controllers/auth_controller.dart';
+import '../../auth/providers.dart';
 
-/// Home shell. In Phase 1 this shows the signed-out empty state; Phase 2
-/// wires authentication and Phase 3 replaces the body with the events list.
+/// Host home shell. Phase 3 replaces the body with the events list +
+/// create-event flow.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('AllPics')),
+      appBar: AppBar(
+        title: const Text('AllPics'),
+        actions: [
+          if (user != null)
+            IconButton(
+              tooltip: 'Sign out',
+              icon: const Icon(Icons.logout_rounded),
+              onPressed: () =>
+                  ref.read(authControllerProvider.notifier).signOut(),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           if (!AppEnv.isSupabaseConfigured)
@@ -32,10 +47,12 @@ class HomeScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-          const Expanded(
+          Expanded(
             child: EmptyView(
               icon: Icons.celebration_rounded,
-              title: 'No events yet',
+              title: user?.fullName?.isNotEmpty == true
+                  ? 'Welcome, ${user!.fullName}!'
+                  : 'No events yet',
               subtitle:
                   'Create your first event and collect every photo from every guest with one QR code.',
             ),
