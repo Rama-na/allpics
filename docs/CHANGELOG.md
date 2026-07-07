@@ -4,6 +4,17 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-07 · Phase 3: Events
+
+### Added
+- Events feature (clean architecture): `Event` entity + `EventsRepository` with Supabase Realtime streams, PostgREST CRUD, cover upload to the `covers` bucket with signed-URL display.
+- Create/edit event wizard: type chips, title/description/location, date picker, optional cover image (image_picker) — events start on the Free plan; code/slug/limits assigned by DB triggers.
+- Host dashboard: live stat grid (guests, uploads used/left, videos, storage, days to expiry), QR code (qr_flutter), tap-to-copy event code, copy link, native share sheet (share_plus).
+- Home: live event list with counter chips and expired badges; empty state with create action; FAB.
+- Soft delete with confirmation; edit pre-filled from the dashboard menu.
+- Router: `/events/new`, `/events/:id`, `/events/:id/edit` — host-guarded.
+- 9 new tests (40 total): entity parsing/quota helpers, full create→dashboard, edit, delete widget flows with a live fake stream.
+
 ## [0.2.0] — 2026-07-07 · Phase 2: Auth
 
 ### Added

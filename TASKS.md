@@ -27,10 +27,10 @@
 - [x] Session persistence + splash routing
 
 ## Phase 3 — Events
-- [ ] Create event wizard (type, title, description, date, location, cover)
-- [ ] Unique event code + QR + share link
-- [ ] Host dashboard with live counters
-- [ ] Event settings / edit / delete
+- [x] Create event wizard (type, title, description, date, location, cover)
+- [x] Unique event code + QR + share link
+- [x] Host dashboard with live counters
+- [x] Event settings / edit / delete
 
 ## Phase 4 — Uploads
 - [ ] Signed upload URL Edge Function (quota, mime, size, rate limit)

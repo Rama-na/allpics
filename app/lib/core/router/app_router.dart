@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/auth/providers.dart';
+import '../../features/events/domain/event.dart';
+import '../../features/events/presentation/create_event_screen.dart';
+import '../../features/events/presentation/event_dashboard_screen.dart';
 import '../../features/guest/presentation/guest_event_screen.dart';
 import '../../features/guest/presentation/join_event_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -22,6 +25,9 @@ abstract final class AppRoute {
   static const joinDeepLink = 'joinDeepLink';
   static const guestEvent = 'guestEvent';
   static const home = 'home';
+  static const createEvent = 'createEvent';
+  static const eventDashboard = 'eventDashboard';
+  static const editEvent = 'editEvent';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -44,9 +50,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Signed-in hosts skip auth/onboarding pages.
       if (isHost && onAuthPages) return '/home';
 
-      // Home is host-only once a backend exists. In unconfigured mode the
+      // Host-only areas once a backend exists. In unconfigured mode the
       // shell stays reachable so UI development and tests never block.
-      if (loc == '/home' && AppEnv.isSupabaseConfigured && !isHost) {
+      final hostOnly = loc == '/home' || loc.startsWith('/events');
+      if (hostOnly && AppEnv.isSupabaseConfigured && !isHost) {
         return '/signin';
       }
       return null;
@@ -94,6 +101,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/home',
         name: AppRoute.home,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/events/new',
+        name: AppRoute.createEvent,
+        builder: (context, state) => const CreateEventScreen(),
+      ),
+      GoRoute(
+        path: '/events/:eventId',
+        name: AppRoute.eventDashboard,
+        builder: (context, state) => EventDashboardScreen(
+          eventId: state.pathParameters['eventId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/events/:eventId/edit',
+        name: AppRoute.editEvent,
+        builder: (context, state) =>
+            CreateEventScreen(existing: state.extra as Event?),
       ),
     ],
   );
