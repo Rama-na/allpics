@@ -21,3 +21,5 @@ worker/.pytest_cache/
 # OS
 .DS_Store
 Thumbs.db
+
+worker/.venv/

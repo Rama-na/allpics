@@ -4,6 +4,18 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-07-07 · Phase 8: AI Worker
+
+### Added
+- Migration 0006: per-upload job enqueueing (uploaded → `thumbnail` pipeline job), host-callable `enqueue_event_job` RPC (highlights/slideshow, dedup-guarded), `claim_processing_job` RPC with `FOR UPDATE SKIP LOCKED` (multi-replica safe, stuck-job reclaim, 3-attempt cap).
+- Python worker (FastAPI + httpx + Pillow + numpy, ffmpeg for video):
+  - Per-upload pipeline: EXIF-aware JPEG thumbnails, 64-bit DCT perceptual hash, Laplacian-variance blur detection, quality scoring, in-event dedupe that keeps the best-quality copy.
+  - Enhancement: median-filter denoise + brightness/contrast/sharpen.
+  - Highlights: quality-ranked selection excluding duplicates/blurry, max 3 per guest for variety, written to `albums`/`album_items`.
+  - Slideshow: letterboxed 720p MP4 via ffmpeg, stored in the `exports` bucket.
+  - Resilient poll loop (jobs can never kill the loop), `/healthz` with counters, graceful idle when unconfigured.
+- Dockerfile (python:3.12-slim + ffmpeg) and a 22-test pytest suite (synthetic-image ops, selection logic, stubbed-API pipeline).
+
 ## [0.7.0] — 2026-07-07 · Phase 7: Notifications
 
 ### Added

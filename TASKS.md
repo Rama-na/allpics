@@ -59,13 +59,13 @@
 - [x] In-app notification center
 
 ## Phase 8 — AI Worker
-- [ ] FastAPI worker + job queue consumer
-- [ ] Duplicate detection (perceptual hash, keep best)
-- [ ] Blur detection (Laplacian variance)
-- [ ] Enhancement (brightness/contrast/sharpen/denoise)
-- [ ] Highlights album generation
-- [ ] Slideshow generation (ffmpeg)
-- [ ] Dockerfile + deploy docs
+- [x] FastAPI worker + job queue consumer
+- [x] Duplicate detection (perceptual hash, keep best)
+- [x] Blur detection (Laplacian variance)
+- [x] Enhancement (brightness/contrast/sharpen/denoise)
+- [x] Highlights album generation
+- [x] Slideshow generation (ffmpeg)
+- [x] Dockerfile + deploy docs
 
 ## Phase 9 — Admin Panel (Flutter Web)
 - [ ] Role-gated admin routes
