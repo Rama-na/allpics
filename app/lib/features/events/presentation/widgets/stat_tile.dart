@@ -23,34 +23,34 @@ class StatTile extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: 20,
-                color: emphasize
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.primary),
-            const SizedBox(height: AppSpacing.sm),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
+        // Scales content down instead of overflowing in tight grid cells.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon,
+                  size: 20,
+                  color: emphasize
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
                 value,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   color: emphasize ? theme.colorScheme.error : null,
                 ),
               ),
-            ),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

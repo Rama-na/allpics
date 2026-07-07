@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/auth/providers.dart';
+import '../../features/admin/presentation/admin_screen.dart';
 import '../../features/album/domain/album_item.dart';
 import '../../features/album/presentation/album_screen.dart';
 import '../../features/album/presentation/media_viewer_screen.dart';
@@ -39,6 +40,7 @@ abstract final class AppRoute {
   static const plans = 'plans';
   static const paymentHistory = 'paymentHistory';
   static const notifications = 'notifications';
+  static const admin = 'admin';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -66,7 +68,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final hostOnly = loc == '/home' ||
           loc.startsWith('/events') ||
           loc.startsWith('/payments') ||
-          loc.startsWith('/notifications');
+          loc.startsWith('/notifications') ||
+          loc.startsWith('/admin');
       if (hostOnly && AppEnv.isSupabaseConfigured && !isHost) {
         return '/signin';
       }
@@ -149,6 +152,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         name: AppRoute.notifications,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      // Role-gated in-screen: non-admins see an access-denied view.
+      GoRoute(
+        path: '/admin',
+        name: AppRoute.admin,
+        builder: (context, state) => const AdminScreen(),
       ),
       // Album is member-visible (host OR guest) — not under /events guard.
       GoRoute(

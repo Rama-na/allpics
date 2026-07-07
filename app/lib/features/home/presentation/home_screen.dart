@@ -9,6 +9,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../auth/providers.dart';
+import '../../admin/providers.dart';
 import '../../events/presentation/widgets/event_card.dart';
 import '../../events/providers.dart';
 import '../../notifications/providers.dart';
@@ -22,6 +23,7 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final eventsAsync = ref.watch(myEventsProvider);
     final unread = ref.watch(unreadCountProvider);
+    final isAdmin = ref.watch(isAdminProvider).value ?? false;
     // Registers the device push token (no-op until Firebase is configured).
     ref.watch(pushRegistrationProvider);
 
@@ -29,6 +31,12 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('AllPics'),
         actions: [
+          if (isAdmin)
+            IconButton(
+              tooltip: 'Admin panel',
+              icon: const Icon(Icons.shield_outlined),
+              onPressed: () => context.pushNamed(AppRoute.admin),
+            ),
           if (user != null)
             IconButton(
               tooltip: 'Notifications',

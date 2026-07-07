@@ -4,6 +4,15 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-07-07 · Phase 9: Admin Panel
+
+### Added
+- Migration 0007: self-guarded admin RPCs — `admin_stats` (platform aggregates incl. revenue, storage, job health), `admin_list_users` (with auth emails + event counts), `admin_list_events`, `admin_set_user_banned` (cannot ban self/admins, audited), `admin_delete_event` (audited).
+- Admin panel at `/admin` (role-gated in-screen and server-side): Overview stat grid (responsive 2/4 columns), Users tab with search + ban/unban, Events tab with search + confirmed delete, Flags tab with live feature-flag toggles.
+- Admin entry icon appears on home only for admins.
+- `StatTile` now scales down instead of overflowing in tight grid cells.
+- 5 new tests (81 total): access denial, stats rendering, ban round-trip, event delete, flag toggle.
+
 ## [0.8.0] — 2026-07-07 · Phase 8: AI Worker
 
 ### Added

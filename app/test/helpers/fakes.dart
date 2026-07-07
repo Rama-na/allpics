@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:allpics/core/errors/app_exception.dart';
+import 'package:allpics/features/admin/domain/admin_models.dart';
+import 'package:allpics/features/admin/domain/admin_repository.dart';
 import 'package:allpics/features/album/domain/album_item.dart';
 import 'package:allpics/features/album/domain/album_repository.dart';
 import 'package:allpics/features/auth/domain/auth_repository.dart';
@@ -575,4 +577,120 @@ class FakePushGateway implements PushGateway {
   void refresh(String newToken) => _refreshController.add(newToken);
 
   void dispose() => _refreshController.close();
+}
+
+/// In-memory [AdminRepository].
+class FakeAdminRepository implements AdminRepository {
+  FakeAdminRepository({this.admin = true});
+
+  final bool admin;
+
+  final users = <AdminUser>[
+    AdminUser(
+      id: 'u1',
+      fullName: 'Priya Sharma',
+      email: 'priya@example.com',
+      role: 'host',
+      isBanned: false,
+      eventCount: 2,
+      createdAt: DateTime(2026, 6, 1),
+    ),
+    AdminUser(
+      id: 'u2',
+      fullName: 'Root Admin',
+      email: 'admin@allpics.app',
+      role: 'admin',
+      isBanned: false,
+      eventCount: 0,
+      createdAt: DateTime(2026, 1, 1),
+    ),
+  ];
+
+  final events = <AdminEvent>[
+    AdminEvent(
+      id: 'e1',
+      title: 'Goa Trip',
+      hostName: 'Priya Sharma',
+      status: 'active',
+      uploadsUsed: 8,
+      photoLimit: 10,
+      guestCount: 4,
+      bytesUsed: 1024 * 1024,
+      expiresAt: DateTime(2026, 8, 1),
+    ),
+  ];
+
+  final flags = <FeatureFlag>[
+    const FeatureFlag(key: 'ai_dedupe', enabled: true),
+    const FeatureFlag(key: 'virus_scan', enabled: false),
+  ];
+
+  final banned = <String, bool>{};
+  final deletedEvents = <String>[];
+
+  @override
+  Future<bool> isAdmin() async => admin;
+
+  @override
+  Future<AdminStats> fetchStats() async => const AdminStats(
+        hosts: 12,
+        eventsTotal: 20,
+        eventsActive: 15,
+        guests: 240,
+        uploads: 1800,
+        storageBytes: 5 * 1024 * 1024 * 1024,
+        revenuePaise: 449700,
+        paymentsCaptured: 17,
+        jobsQueued: 2,
+        jobsFailed: 0,
+      );
+
+  @override
+  Future<List<AdminUser>> fetchUsers({String search = ''}) async => users
+      .where((u) =>
+          search.isEmpty ||
+          u.fullName.toLowerCase().contains(search.toLowerCase()) ||
+          u.email.toLowerCase().contains(search.toLowerCase()))
+      .map((u) => banned[u.id] == null
+          ? u
+          : AdminUser(
+              id: u.id,
+              fullName: u.fullName,
+              email: u.email,
+              role: u.role,
+              isBanned: banned[u.id]!,
+              eventCount: u.eventCount,
+              createdAt: u.createdAt,
+            ))
+      .toList();
+
+  @override
+  Future<void> setUserBanned(String userId, bool value) async {
+    if (users.any((u) => u.id == userId && u.isAdmin)) {
+      throw const ValidationException('This account cannot be banned.');
+    }
+    banned[userId] = value;
+  }
+
+  @override
+  Future<List<AdminEvent>> fetchEvents({String search = ''}) async => events
+      .where((e) =>
+          search.isEmpty ||
+          e.title.toLowerCase().contains(search.toLowerCase()))
+      .toList();
+
+  @override
+  Future<void> deleteEvent(String eventId) async {
+    deletedEvents.add(eventId);
+    events.removeWhere((e) => e.id == eventId);
+  }
+
+  @override
+  Future<List<FeatureFlag>> fetchFlags() async => List.of(flags);
+
+  @override
+  Future<void> setFlag(String key, bool enabled) async {
+    final index = flags.indexWhere((f) => f.key == key);
+    if (index >= 0) flags[index] = FeatureFlag(key: key, enabled: enabled);
+  }
 }

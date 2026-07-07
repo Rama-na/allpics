@@ -68,10 +68,10 @@
 - [x] Dockerfile + deploy docs
 
 ## Phase 9 — Admin Panel (Flutter Web)
-- [ ] Role-gated admin routes
-- [ ] Users, events, payments management
-- [ ] Analytics + storage usage
-- [ ] Ban users, delete events, feature flags
+- [x] Role-gated admin routes
+- [x] Users, events, payments management
+- [x] Analytics + storage usage
+- [x] Ban users, delete events, feature flags
 
 ## Phase 10 — Settings & Polish
 - [ ] Profile, notification prefs, theme toggle
