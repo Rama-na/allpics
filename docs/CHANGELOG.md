@@ -4,6 +4,17 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-07-07 · Phase 7: Notifications
+
+### Added
+- Notification generation in the database (migration 0005): guest joined, first-upload + every-25-uploads milestones, storage-low at 90% quota (single-fire), all respecting per-host notification preferences; expiry warnings deduped once per day.
+- `event-expiry` Edge Function (scheduled daily): expiry sweep + T-3-day warnings. Service-key guarded.
+- `send-notification` Edge Function (scheduled per minute): FCM HTTP v1 fan-out with service-account JWT signing, stale-token cleanup, `pushed_at` bookkeeping — degrades gracefully to in-app-only until `FCM_SERVICE_ACCOUNT_JSON` is set.
+- Payment-success notification issued by the Razorpay webhook.
+- In-app notification center: live Realtime list, unread highlighting, tap-through to the event dashboard, mark-read/mark-all-read, swipe-to-delete; unread badge on home.
+- `PushGateway` abstraction with a no-op default — `firebase_messaging` plugs in behind it when Firebase config arrives, with token registration + refresh already wired.
+- 6 new tests (76 total).
+
 ## [0.6.0] — 2026-07-07 · Phase 6: Payments
 
 ### Added

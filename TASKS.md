@@ -53,10 +53,10 @@
   - Note: invoice number issued by webhook; PDF export lands with the worker (Phase 8)
 
 ## Phase 7 — Notifications
-- [ ] FCM token registration
-- [ ] Notification fan-out Edge Function
-- [ ] Triggers: guest joined, new uploads, expiring, storage full, payment success
-- [ ] In-app notification center
+- [x] FCM token registration (PushGateway abstraction; FirebasePushGateway drops in with Firebase config)
+- [x] Notification fan-out Edge Function (send-notification, FCM HTTP v1)
+- [x] Triggers: guest joined, new uploads, expiring, storage full, payment success
+- [x] In-app notification center
 
 ## Phase 8 — AI Worker
 - [ ] FastAPI worker + job queue consumer

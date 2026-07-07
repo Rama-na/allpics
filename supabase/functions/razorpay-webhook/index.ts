@@ -153,5 +153,22 @@ Deno.serve(async (req) => {
     return errorResponse("internal", "Could not apply the upgrade.", 500);
   }
 
+  // ---- Notify the host (in-app + push via send-notification) ----
+  const { data: eventRow } = await admin
+    .from("events")
+    .select("host_id, title")
+    .eq("id", row.event_id)
+    .single();
+  if (eventRow) {
+    await admin.from("notifications").insert({
+      user_id: eventRow.host_id,
+      type: "payment_success",
+      title: "Payment successful 🎉",
+      body:
+        `Your upgrade for "${eventRow.title}" is live — the new photo limit applies now. Invoice ${invoiceNumber}.`,
+      data: { event_id: row.event_id, invoice_number: invoiceNumber },
+    });
+  }
+
   return jsonResponse({ ok: true, invoice_number: invoiceNumber });
 });

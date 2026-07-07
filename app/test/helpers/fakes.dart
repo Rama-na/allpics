@@ -10,6 +10,8 @@ import 'package:allpics/features/events/domain/event.dart';
 import 'package:allpics/features/events/domain/events_repository.dart';
 import 'package:allpics/features/guest/domain/join_repository.dart';
 import 'package:allpics/features/guest/domain/joinable_event.dart';
+import 'package:allpics/features/notifications/domain/app_notification.dart';
+import 'package:allpics/features/notifications/domain/notifications_repository.dart';
 import 'package:allpics/features/payments/domain/payment_models.dart';
 import 'package:allpics/features/payments/domain/payments_repository.dart';
 import 'package:allpics/features/uploads/domain/uploads_repository.dart';
@@ -479,4 +481,98 @@ class FakeCheckoutGateway implements CheckoutGateway {
     opened.add(order);
     return next;
   }
+}
+
+/// In-memory [NotificationsRepository] with live read/delete semantics.
+class FakeNotificationsRepository implements NotificationsRepository {
+  FakeNotificationsRepository({List<AppNotification>? initial})
+      : _items = initial ?? [];
+
+  final List<AppNotification> _items;
+  final _controller = StreamController<List<AppNotification>>.broadcast();
+  final registeredTokens = <String>[];
+
+  static AppNotification build({
+    required String id,
+    AppNotificationType type = AppNotificationType.guestJoined,
+    String title = 'Anita joined Goa Trip',
+    String body = 'They can now add photos to the album.',
+    String? eventId = 'event-1',
+    bool read = false,
+  }) =>
+      AppNotification(
+        id: id,
+        type: type,
+        title: title,
+        body: body,
+        data: eventId == null ? const {} : {'event_id': eventId},
+        createdAt: DateTime(2026, 7, 1, 12),
+        readAt: read ? DateTime(2026, 7, 1, 13) : null,
+      );
+
+  void _emit() => _controller.add(List.of(_items));
+
+  @override
+  Stream<List<AppNotification>> watchNotifications() async* {
+    yield List.of(_items);
+    yield* _controller.stream;
+  }
+
+  AppNotification _copyRead(AppNotification n) => AppNotification(
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        body: n.body,
+        data: n.data,
+        createdAt: n.createdAt,
+        readAt: DateTime.now(),
+      );
+
+  @override
+  Future<void> markRead(String notificationId) async {
+    final index = _items.indexWhere((n) => n.id == notificationId);
+    if (index >= 0) {
+      _items[index] = _copyRead(_items[index]);
+      _emit();
+    }
+  }
+
+  @override
+  Future<void> markAllRead() async {
+    for (var i = 0; i < _items.length; i++) {
+      if (!_items[i].isRead) _items[i] = _copyRead(_items[i]);
+    }
+    _emit();
+  }
+
+  @override
+  Future<void> delete(String notificationId) async {
+    _items.removeWhere((n) => n.id == notificationId);
+    _emit();
+  }
+
+  @override
+  Future<void> registerPushToken(String token) async {
+    registeredTokens.add(token);
+  }
+
+  void dispose() => _controller.close();
+}
+
+/// Scriptable [PushGateway].
+class FakePushGateway implements PushGateway {
+  FakePushGateway({this.token});
+
+  final String? token;
+  final _refreshController = StreamController<String>.broadcast();
+
+  @override
+  Future<String?> obtainToken() async => token;
+
+  @override
+  Stream<String> get onTokenRefresh => _refreshController.stream;
+
+  void refresh(String newToken) => _refreshController.add(newToken);
+
+  void dispose() => _refreshController.close();
 }

@@ -11,6 +11,7 @@ import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../auth/providers.dart';
 import '../../events/presentation/widgets/event_card.dart';
 import '../../events/providers.dart';
+import '../../notifications/providers.dart';
 
 /// Host home: live list of events + create action.
 class HomeScreen extends ConsumerWidget {
@@ -20,11 +21,24 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final eventsAsync = ref.watch(myEventsProvider);
+    final unread = ref.watch(unreadCountProvider);
+    // Registers the device push token (no-op until Firebase is configured).
+    ref.watch(pushRegistrationProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('AllPics'),
         actions: [
+          if (user != null)
+            IconButton(
+              tooltip: 'Notifications',
+              icon: Badge(
+                isLabelVisible: unread > 0,
+                label: Text('$unread'),
+                child: const Icon(Icons.notifications_none_rounded),
+              ),
+              onPressed: () => context.pushNamed(AppRoute.notifications),
+            ),
           if (user != null)
             IconButton(
               tooltip: 'Payment history',

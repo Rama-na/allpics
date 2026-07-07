@@ -15,6 +15,7 @@ import '../../features/guest/presentation/join_event_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/payments/presentation/payment_history_screen.dart';
 import '../../features/payments/presentation/plans_screen.dart';
 import '../config/app_env.dart';
@@ -37,6 +38,7 @@ abstract final class AppRoute {
   static const mediaViewer = 'mediaViewer';
   static const plans = 'plans';
   static const paymentHistory = 'paymentHistory';
+  static const notifications = 'notifications';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -63,7 +65,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // shell stays reachable so UI development and tests never block.
       final hostOnly = loc == '/home' ||
           loc.startsWith('/events') ||
-          loc.startsWith('/payments');
+          loc.startsWith('/payments') ||
+          loc.startsWith('/notifications');
       if (hostOnly && AppEnv.isSupabaseConfigured && !isHost) {
         return '/signin';
       }
@@ -141,6 +144,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/payments',
         name: AppRoute.paymentHistory,
         builder: (context, state) => const PaymentHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: AppRoute.notifications,
+        builder: (context, state) => const NotificationsScreen(),
       ),
       // Album is member-visible (host OR guest) — not under /events guard.
       GoRoute(
