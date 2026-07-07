@@ -19,6 +19,8 @@ import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/payments/presentation/payment_history_screen.dart';
 import '../../features/payments/presentation/plans_screen.dart';
+import '../../features/settings/presentation/privacy_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../config/app_env.dart';
 import 'go_router_refresh_stream.dart';
 
@@ -41,6 +43,8 @@ abstract final class AppRoute {
   static const paymentHistory = 'paymentHistory';
   static const notifications = 'notifications';
   static const admin = 'admin';
+  static const settings = 'settings';
+  static const privacy = 'privacy';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -69,6 +73,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc.startsWith('/events') ||
           loc.startsWith('/payments') ||
           loc.startsWith('/notifications') ||
+          loc.startsWith('/settings') ||
           loc.startsWith('/admin');
       if (hostOnly && AppEnv.isSupabaseConfigured && !isHost) {
         return '/signin';
@@ -158,6 +163,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin',
         name: AppRoute.admin,
         builder: (context, state) => const AdminScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: AppRoute.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/privacy',
+        name: AppRoute.privacy,
+        builder: (context, state) => const PrivacyScreen(),
       ),
       // Album is member-visible (host OR guest) — not under /events guard.
       GoRoute(

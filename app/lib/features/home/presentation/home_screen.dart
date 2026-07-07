@@ -7,7 +7,6 @@ import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
-import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../auth/providers.dart';
 import '../../admin/providers.dart';
 import '../../events/presentation/widgets/event_card.dart';
@@ -49,16 +48,9 @@ class HomeScreen extends ConsumerWidget {
             ),
           if (user != null)
             IconButton(
-              tooltip: 'Payment history',
-              icon: const Icon(Icons.receipt_long_outlined),
-              onPressed: () => context.pushNamed(AppRoute.paymentHistory),
-            ),
-          if (user != null)
-            IconButton(
-              tooltip: 'Sign out',
-              icon: const Icon(Icons.logout_rounded),
-              onPressed: () =>
-                  ref.read(authControllerProvider.notifier).signOut(),
+              tooltip: 'Settings',
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => context.pushNamed(AppRoute.settings),
             ),
         ],
       ),

@@ -4,6 +4,16 @@ All notable changes to AllPics. Format follows [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-07-07 · Phase 10: Settings
+
+### Added
+- Migration 0008: `delete_own_account()` — audited, cascading self-service account deletion.
+- Settings screen: profile name editing, theme selector (system/light/dark — local-first via shared_preferences so it applies instantly and works offline, synced to the profile), notification preference switches (wired to the DB triggers from Phase 7), payment history + privacy links, sign out, and double-confirmed account deletion.
+- In-app privacy policy screen.
+- Home app bar simplified to notifications + settings (+ admin shield); history and sign-out moved into settings.
+- Product decision: English-only (Hindi scaffold dropped).
+- 6 new tests (87 total).
+
 ## [0.9.0] — 2026-07-07 · Phase 9: Admin Panel
 
 ### Added

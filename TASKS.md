@@ -74,10 +74,10 @@
 - [x] Ban users, delete events, feature flags
 
 ## Phase 10 — Settings & Polish
-- [ ] Profile, notification prefs, theme toggle
-- [ ] i18n (en, hi)
-- [ ] Delete account, privacy screens
-- [ ] Micro-animation pass
+- [x] Profile, notification prefs, theme toggle
+- [x] i18n — English only (Hindi dropped per product decision)
+- [x] Delete account, privacy screens
+- [x] Micro-animation pass (button/loading transitions, page transitions, splash/onboarding animations, badge)
 
 ## Phase 11 — Testing Hardening
 - [ ] Unit tests (repositories, notifiers)

@@ -16,6 +16,8 @@ import 'package:allpics/features/notifications/domain/app_notification.dart';
 import 'package:allpics/features/notifications/domain/notifications_repository.dart';
 import 'package:allpics/features/payments/domain/payment_models.dart';
 import 'package:allpics/features/payments/domain/payments_repository.dart';
+import 'package:allpics/features/settings/domain/profile.dart';
+import 'package:allpics/features/settings/domain/profile_repository.dart';
 import 'package:allpics/features/uploads/domain/uploads_repository.dart';
 
 /// In-memory [AuthRepository] for widget/unit tests.
@@ -692,5 +694,45 @@ class FakeAdminRepository implements AdminRepository {
   Future<void> setFlag(String key, bool enabled) async {
     final index = flags.indexWhere((f) => f.key == key);
     if (index >= 0) flags[index] = FeatureFlag(key: key, enabled: enabled);
+  }
+}
+
+/// In-memory [ProfileRepository].
+class FakeProfileRepository implements ProfileRepository {
+  Profile profile = const Profile(
+    id: 'host-1',
+    fullName: 'Test Host',
+    email: 'host@example.com',
+    theme: 'system',
+    notifyGuestJoined: true,
+    notifyNewUploads: true,
+    notifyExpiry: true,
+  );
+  bool accountDeleted = false;
+
+  @override
+  Future<Profile> fetchProfile() async => profile;
+
+  @override
+  Future<Profile> updateProfile({
+    String? fullName,
+    String? theme,
+    bool? notifyGuestJoined,
+    bool? notifyNewUploads,
+    bool? notifyExpiry,
+  }) async {
+    profile = profile.copyWith(
+      fullName: fullName,
+      theme: theme,
+      notifyGuestJoined: notifyGuestJoined,
+      notifyNewUploads: notifyNewUploads,
+      notifyExpiry: notifyExpiry,
+    );
+    return profile;
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    accountDeleted = true;
   }
 }

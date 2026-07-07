@@ -6,8 +6,10 @@ import 'package:allpics/features/payments/domain/payment_models.dart';
 import 'package:allpics/features/payments/domain/payments_repository.dart';
 import 'package:allpics/features/payments/presentation/plans_screen.dart';
 import 'package:allpics/features/payments/providers.dart';
+import 'package:allpics/features/settings/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -124,18 +126,25 @@ void main() {
     final events = FakeEventsRepository(initial: [
       FakeEventsRepository.buildEvent(title: 'Goa Trip'),
     ]);
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(auth),
         eventsRepositoryProvider.overrideWithValue(events),
         paymentsRepositoryProvider.overrideWithValue(repo),
+        profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
       ],
       child: const AllPicsApp(),
     ));
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Payment history'));
+    // Payment history lives under Settings.
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Payment history'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Payment history'));
     await tester.pumpAndSettle();
 
     expect(find.text('Plus — Goa Trip'), findsOneWidget);
