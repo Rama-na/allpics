@@ -1,0 +1,63 @@
+# AllPics · Supabase local/CI project configuration.
+#
+# Without this file the CLI cannot locate the project root: `supabase db
+# start`/`db reset` fall back to CWD-relative defaults, silently apply ZERO
+# migrations, and skip seed.sql — which is exactly how CI's schema
+# verification fails with "MISSING POLICY profiles_select_own" even though
+# every policy lives in migrations/0003_rls_policies.sql.
+#
+# Omitted sections use the Supabase CLI defaults.
+
+project_id = "allpics"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[db.seed]
+enabled = true
+# Resolved relative to this file → supabase/seed.sql (plan catalog + flags).
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000", "https://allpics.app"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+# Guests join events via Supabase anonymous auth — required for the product.
+enable_anonymous_sign_ins = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+double_confirm_changes = true
+
+# Google sign-in (hosts). Enable per-environment with real credentials:
+#   supabase secrets / dashboard in hosted projects; env() locally.
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+
+[storage]
+enabled = true
+# Matches the create-upload-url Edge Function video cap (250 MB).
+file_size_limit = "250MiB"
+
+[edge_runtime]
+enabled = true
+
+[analytics]
+enabled = false
