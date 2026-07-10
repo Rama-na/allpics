@@ -16,11 +16,14 @@ class QrShareCard extends StatelessWidget {
   String get _link => event.shareLink(AppEnv.shareBaseUrl);
 
   Future<void> _share() async {
-    await SharePlus.instance.share(ShareParams(
-      title: event.title,
-      text: 'Add your photos to "${event.title}" on AllPics!\n'
-          'Open $_link or use code ${event.eventCode}.',
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        title: event.title,
+        text:
+            'Add your photos to "${event.title}" on AllPics!\n'
+            'Open $_link or use code ${event.eventCode}.',
+      ),
+    );
   }
 
   void _copyCode(BuildContext context) {
@@ -53,20 +56,27 @@ class QrShareCard extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: QrImageView(
-                data: _link,
-                version: QrVersions.auto,
-                size: 180,
-                backgroundColor: Colors.white,
+              child: Semantics(
+                image: true,
+                label: 'QR code — guests scan to join "${event.title}"',
+                child: QrImageView(
+                  data: _link,
+                  version: QrVersions.auto,
+                  size: 180,
+                  backgroundColor: Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             InkWell(
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               onTap: () => _copyCode(context),
+
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -78,8 +88,11 @@ class QrShareCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Icon(Icons.copy_rounded,
-                        size: 18, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.copy_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ),

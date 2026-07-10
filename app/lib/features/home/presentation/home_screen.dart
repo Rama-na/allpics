@@ -6,6 +6,7 @@ import '../../../core/config/app_env.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/shimmer.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/providers.dart';
 import '../../admin/providers.dart';
@@ -79,7 +80,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           Expanded(
             child: eventsAsync.when(
-              loading: () => const LoadingView(),
+              loading: () => const SkeletonEventList(),
               error: (error, _) => ErrorView(
                 message: error is AppException
                     ? error.message

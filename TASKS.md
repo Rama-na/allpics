@@ -86,6 +86,16 @@
 - [x] Worker pytest suite
 - [x] RLS assertion tests (supabase/tests/verify_schema.sql — run post-migration)
 
+## UX Overhaul — Try-first landing, camera, upgrade merchandising
+- [x] Landing screen with Join / Create-free CTAs + free-tier messaging; onboarding shown once (persisted flag)
+- [x] Deferred sign-up: create-event wizard open signed-out, auth sheet at publish
+- [x] In-app camera: tap photo / hold video, flip, flash, swipeable color filters (baked into photos), captions
+- [x] Plans screen redesign (usage meter, bullets, MOST POPULAR, per-upload framing)
+- [x] Contextual upgrade sheet at ≥80% quota (once per session) + persistent dashboard banner
+- [x] Video thumbnails in album grid + play badge
+- [x] Shimmer skeletons (album grid, home list), semantics pass (tiles, QR, CTAs)
+- [x] `flutter analyze` clean · 127 tests green · release web build verified
+
 ## Phase 12 — Deployment
 - [x] Android signing + Play config (key.properties flow, R8 + Razorpay keep rules, App Links intent filter)
 - [x] iOS entitlements + Universal Links (Runner.entitlements, usage descriptions)

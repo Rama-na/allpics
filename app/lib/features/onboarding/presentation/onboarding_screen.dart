@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../providers.dart';
 
 class _OnboardingPage {
   const _OnboardingPage(this.icon, this.title, this.subtitle);
@@ -26,20 +28,21 @@ const _pages = [
   ),
   _OnboardingPage(
     Icons.auto_awesome_rounded,
-    'A beautiful shared album',
-    'Live gallery, AI highlights, duplicates removed. Download everything anytime.',
+    'Free to try, upgrade anytime',
+    'Start free with 10 uploads for 30 days. Live gallery, AI highlights, '
+        'duplicates removed — download everything anytime.',
   ),
 ];
 
-/// Three-page intro carousel shown on first launch.
-class OnboardingScreen extends StatefulWidget {
+/// Three-page intro carousel shown once, on first launch.
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pageController = PageController();
   int _index = 0;
 
@@ -49,6 +52,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  void _finish() {
+    // Fire-and-forget: never block navigation on persistence.
+    ref.read(firstRunStoreProvider).markOnboardingSeen();
+    context.goNamed(AppRoute.landing);
+  }
+
   void _next() {
     if (_index < _pages.length - 1) {
       _pageController.nextPage(
@@ -56,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeOutCubic,
       );
     } else {
-      context.goNamed(AppRoute.signIn);
+      _finish();
     }
   }
 
@@ -74,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: TextButton(
-                  onPressed: () => context.goNamed(AppRoute.signIn),
+                  onPressed: _finish,
                   child: const Text('Skip'),
                 ),
               ),
@@ -87,7 +96,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, i) {
                   final page = _pages[i];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

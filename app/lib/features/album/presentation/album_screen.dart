@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/shimmer.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../domain/album_item.dart';
 import '../providers.dart';
@@ -44,11 +45,13 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       final files = <XFile>[];
       for (final item in batch) {
         final bytes = await repo.downloadBytes(item.storagePath);
-        files.add(XFile.fromData(
-          bytes,
-          name: item.storagePath.split('/').last,
-          mimeType: item.isVideo ? 'video/mp4' : 'image/jpeg',
-        ));
+        files.add(
+          XFile.fromData(
+            bytes,
+            name: item.storagePath.split('/').last,
+            mimeType: item.isVideo ? 'video/mp4' : 'image/jpeg',
+          ),
+        );
       }
       await SharePlus.instance.share(ShareParams(files: files));
     } on AppException catch (e) {
@@ -75,19 +78,21 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
             onSelected: (sort) =>
                 ref.read(albumViewControllerProvider.notifier).setSort(sort),
             itemBuilder: (context) => AlbumSort.values
-                .map((s) => PopupMenuItem(
-                      value: s,
-                      child: Row(
-                        children: [
-                          if (s == view.sort)
-                            const Icon(Icons.check_rounded, size: 18)
-                          else
-                            const SizedBox(width: 18),
-                          const SizedBox(width: 8),
-                          Text(s.label),
-                        ],
-                      ),
-                    ))
+                .map(
+                  (s) => PopupMenuItem(
+                    value: s,
+                    child: Row(
+                      children: [
+                        if (s == view.sort)
+                          const Icon(Icons.check_rounded, size: 18)
+                        else
+                          const SizedBox(width: 18),
+                        const SizedBox(width: 8),
+                        Text(s.label),
+                      ],
+                    ),
+                  ),
+                )
                 .toList(),
           ),
           IconButton(
@@ -112,7 +117,11 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              0,
+            ),
             child: TextField(
               controller: _search,
               onChanged: (q) =>
@@ -136,29 +145,32 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: AlbumFilter.values
-                    .map((f) => Padding(
-                          padding:
-                              const EdgeInsets.only(right: AppSpacing.sm),
-                          child: FilterChip(
-                            label: Text(f.label),
-                            selected: view.filter == f,
-                            onSelected: (_) => ref
-                                .read(albumViewControllerProvider.notifier)
-                                .setFilter(f),
-                          ),
-                        ))
+                    .map(
+                      (f) => Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
+                        child: FilterChip(
+                          label: Text(f.label),
+                          selected: view.filter == f,
+                          onSelected: (_) => ref
+                              .read(albumViewControllerProvider.notifier)
+                              .setFilter(f),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
           ),
           Expanded(
             child: itemsAsync.when(
-              loading: () => const LoadingView(),
+              loading: () => const SkeletonAlbumGrid(),
               error: (error, _) => ErrorView(
                 message: error is AppException
                     ? error.message
@@ -171,9 +183,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                 if (visible.isEmpty) {
                   return EmptyView(
                     icon: Icons.photo_library_outlined,
-                    title: items.isEmpty
-                        ? 'No photos yet'
-                        : 'Nothing matches',
+                    title: items.isEmpty ? 'No photos yet' : 'Nothing matches',
                     subtitle: items.isEmpty
                         ? 'Photos appear here live as guests upload them.'
                         : 'Try a different search or filter.',
@@ -181,8 +191,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                 }
                 return GridView.builder(
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  gridDelegate:
-                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 140,
                     mainAxisSpacing: AppSpacing.sm,
                     crossAxisSpacing: AppSpacing.sm,

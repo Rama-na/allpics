@@ -33,6 +33,7 @@ class UploadTask {
     required this.kind,
     this.filePath,
     this.inMemoryBytes,
+    this.caption = '',
     this.status = UploadTaskStatus.queued,
     this.progress = 0,
     this.error,
@@ -52,6 +53,9 @@ class UploadTask {
 
   /// Fallback for platforms without stable file paths (web, tests).
   final Uint8List? inMemoryBytes;
+
+  /// Optional caption applied on upload confirmation (in-app camera).
+  final String caption;
 
   final UploadTaskStatus status;
 
@@ -74,35 +78,36 @@ class UploadTask {
     String? error,
     String? uploadId,
     bool clearError = false,
-  }) =>
-      UploadTask(
-        id: id,
-        eventId: eventId,
-        fileName: fileName,
-        mimeType: mimeType,
-        totalBytes: totalBytes,
-        kind: kind,
-        filePath: filePath,
-        inMemoryBytes: inMemoryBytes,
-        status: status ?? this.status,
-        progress: progress ?? this.progress,
-        error: clearError ? null : (error ?? this.error),
-        uploadId: uploadId ?? this.uploadId,
-      );
+  }) => UploadTask(
+    id: id,
+    eventId: eventId,
+    fileName: fileName,
+    mimeType: mimeType,
+    totalBytes: totalBytes,
+    kind: kind,
+    filePath: filePath,
+    inMemoryBytes: inMemoryBytes,
+    caption: caption,
+    status: status ?? this.status,
+    progress: progress ?? this.progress,
+    error: clearError ? null : (error ?? this.error),
+    uploadId: uploadId ?? this.uploadId,
+  );
 
   /// Persistence for offline retry (bytes are NOT serialized — path only,
   /// so in-memory tasks are session-scoped by design).
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'event_id': eventId,
-        'file_name': fileName,
-        'mime_type': mimeType,
-        'total_bytes': totalBytes,
-        'kind': kind.name,
-        'file_path': filePath,
-        'status': status.name,
-        'error': error,
-      };
+    'id': id,
+    'event_id': eventId,
+    'file_name': fileName,
+    'mime_type': mimeType,
+    'total_bytes': totalBytes,
+    'kind': kind.name,
+    'file_path': filePath,
+    'caption': caption,
+    'status': status.name,
+    'error': error,
+  };
 
   static UploadTask? fromJson(Map<String, dynamic> json) {
     final filePath = json['file_path'] as String?;
@@ -118,6 +123,7 @@ class UploadTask {
         orElse: () => MediaKind.photo,
       ),
       filePath: filePath,
+      caption: (json['caption'] as String?) ?? '',
       // Restored tasks resume from queued regardless of prior state.
       status: UploadTaskStatus.queued,
     );
@@ -145,12 +151,12 @@ MediaKind mediaKindForMime(String mime) =>
     mime.startsWith('video/') ? MediaKind.video : MediaKind.photo;
 
 bool isSupportedMime(String mime) => const {
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/heic',
-      'image/heif',
-      'video/mp4',
-      'video/quicktime',
-      'video/webm',
-    }.contains(mime);
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+}.contains(mime);

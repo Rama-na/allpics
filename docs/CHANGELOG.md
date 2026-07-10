@@ -2,7 +2,21 @@
 
 All notable changes to AllPics. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [Unreleased] · Landing & onboarding UX overhaul
+
+### Added
+- **Try-first landing screen** (`/landing`): action-first entry with "Join an event" and "Create an event — free" as equal CTAs, free-tier messaging ("10 uploads, 30 days, no card"), glass hero, and a secondary sign-in link. Onboarding carousel now shows exactly once (persisted via `FirstRunStore`); the app no longer dead-ends on the sign-in form.
+- **Deferred sign-up at event creation**: the create-event wizard is open to signed-out visitors; a bottom-sheet auth step ("Save your event") appears only when they publish. The form draft survives under the modal. `/events/new` exempted from the host-only router guard.
+- **In-app camera** (`features/capture/`): tap for photo, hold for video (with recording timer), flip camera, flash cycle, and six swipeable color filters (Original/Mono/Sepia/Vivid/Warm/Cool) rendered live on the preview and baked into photos via `dart:ui` (videos keep filters preview-only). Review step with optional caption, feeding the existing upload queue. Guest upload panel gains an "Open camera" button (mobile; web keeps the gallery picker). Captions flow through `confirmUploaded` into the existing `uploads.caption` column.
+- **Merchandised upgrade UX**: plans screen redesign (usage meter hero, per-plan taglines and feature bullets, per-upload value framing, "MOST POPULAR" emphasis on Plus, free plan hidden once outgrown); contextual upgrade bottom sheet for hosts fired once per session when an album passes 80% usage; persistent near-quota banner with progress bar on the event dashboard; friendlier guest album-full copy.
+- Shimmer skeleton loaders (dependency-free) for the album grid and home event list.
+- Video grid tiles now render the worker-generated thumbnail with a play badge instead of a bare placeholder icon.
+- Accessibility: semantic labels on media tiles, the QR share card, landing CTAs, capture controls, and plan cards; live regions for quota banners.
+- 24 new tests (127 total): landing/onboarding first-run flows, deferred-auth create (publish, dismiss, signed-in bypass), capture filters + filter baking + caption plumbing, plan merchandising + upgrade nudge session semantics, video-thumb media tiles, skeleton widgets. Full-journey E2E updated to the try-first flow.
+
+### Changed
+- Splash routing: signed-in hosts → home; first-time users → onboarding (once); everyone else → landing.
+- `camera: ^0.11.4` dependency; Android manifest gains CAMERA/RECORD_AUDIO permissions (iOS usage descriptions already present).
 
 ## [1.0.0-rc.1] — 2026-07-07 · Phase 12: Deployment
 

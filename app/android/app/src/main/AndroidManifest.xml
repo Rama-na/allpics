@@ -2,6 +2,10 @@
     <!-- Network access for Supabase, Razorpay, and media upload/download. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- In-app camera capture (photos + video with audio). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <application
         android:label="AllPics"
         android:name="${applicationName}"

@@ -14,6 +14,8 @@ import '../../features/events/presentation/event_dashboard_screen.dart';
 import '../../features/guest/presentation/guest_event_screen.dart';
 import '../../features/guest/presentation/join_event_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/capture/presentation/capture_screen.dart';
+import '../../features/onboarding/presentation/landing_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
@@ -28,6 +30,8 @@ import 'go_router_refresh_stream.dart';
 abstract final class AppRoute {
   static const splash = 'splash';
   static const onboarding = 'onboarding';
+  static const landing = 'landing';
+  static const capture = 'capture';
   static const signIn = 'signIn';
   static const signUp = 'signUp';
   static const join = 'join';
@@ -62,15 +66,21 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final isHost = user != null && user.isHost;
       final onAuthPages =
-          loc == '/signin' || loc == '/signup' || loc == '/onboarding';
+          loc == '/signin' ||
+          loc == '/signup' ||
+          loc == '/onboarding' ||
+          loc == '/landing';
 
-      // Signed-in hosts skip auth/onboarding pages.
+      // Signed-in hosts skip auth/onboarding/landing pages.
       if (isHost && onAuthPages) return '/home';
 
       // Host-only areas once a backend exists. In unconfigured mode the
       // shell stays reachable so UI development and tests never block.
-      final hostOnly = loc == '/home' ||
-          loc.startsWith('/events') ||
+      // `/events/new` is deliberately open: anyone may draft an event and
+      // is asked to sign in only when they publish it (try-first flow).
+      final hostOnly =
+          loc == '/home' ||
+          (loc.startsWith('/events') && loc != '/events/new') ||
           loc.startsWith('/payments') ||
           loc.startsWith('/notifications') ||
           loc.startsWith('/settings') ||
@@ -90,6 +100,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         name: AppRoute.onboarding,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/landing',
+        name: AppRoute.landing,
+        builder: (context, state) => const LandingScreen(),
       ),
       GoRoute(
         path: '/signin',
@@ -132,9 +147,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/events/:eventId',
         name: AppRoute.eventDashboard,
-        builder: (context, state) => EventDashboardScreen(
-          eventId: state.pathParameters['eventId']!,
-        ),
+        builder: (context, state) =>
+            EventDashboardScreen(eventId: state.pathParameters['eventId']!),
       ),
       GoRoute(
         path: '/events/:eventId/edit',
@@ -173,6 +187,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings/privacy',
         name: AppRoute.privacy,
         builder: (context, state) => const PrivacyScreen(),
+      ),
+      // Camera capture is member-visible (guests upload) — not host-gated.
+      GoRoute(
+        path: '/capture/:eventId',
+        name: AppRoute.capture,
+        builder: (context, state) =>
+            CaptureScreen(eventId: state.pathParameters['eventId']!),
       ),
       // Album is member-visible (host OR guest) — not under /events guard.
       GoRoute(

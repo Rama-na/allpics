@@ -15,25 +15,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../helpers/fakes.dart';
 
 Future<ProviderContainer> _pumpJoined(
-    WidgetTester tester, FakeUploadsRepository uploads) async {
+  WidgetTester tester,
+  FakeUploadsRepository uploads,
+) async {
   SharedPreferences.setMockInitialValues({});
   final auth = FakeAuthRepository();
   final join = FakeJoinRepository(auth: auth);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      joinRepositoryProvider.overrideWithValue(join),
-      uploadsRepositoryProvider.overrideWithValue(uploads),
-    ],
-    child: const AllPicsApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        joinRepositoryProvider.overrideWithValue(join),
+        uploadsRepositoryProvider.overrideWithValue(uploads),
+      ],
+      child: const AllPicsApp(),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 1700));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Skip'));
   await tester.pumpAndSettle();
-  await tester.ensureVisible(find.text('Joining an event? Enter code'));
+  // Landing promotes joining to a first-class action.
+  await tester.ensureVisible(find.text('Join an event'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Joining an event? Enter code'));
+  await tester.tap(find.text('Join an event'));
   await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextFormField), 'K3XR7P');
   await tester.tap(find.text('Find event'));
@@ -45,7 +50,8 @@ Future<ProviderContainer> _pumpJoined(
   await tester.pumpAndSettle();
   expect(find.byType(GuestEventScreen), findsOneWidget);
   return ProviderScope.containerOf(
-      tester.element(find.byType(GuestEventScreen)));
+    tester.element(find.byType(GuestEventScreen)),
+  );
 }
 
 XFile _file(String name) {
@@ -56,8 +62,9 @@ XFile _file(String name) {
 }
 
 void main() {
-  testWidgets('joined guest sees the upload panel and uploads files',
-      (tester) async {
+  testWidgets('joined guest sees the upload panel and uploads files', (
+    tester,
+  ) async {
     final uploads = FakeUploadsRepository();
     final container = await _pumpJoined(tester, uploads);
 
@@ -66,9 +73,10 @@ void main() {
     // Drive the queue directly (the OS picker cannot open in tests).
     // runAsync: the queue reads real temp files, which needs real async I/O.
     await tester.runAsync(() async {
-      await container
-          .read(uploadQueueControllerProvider.notifier)
-          .addFiles('event-1', [_file('beach.jpg'), _file('sunset.jpg')]);
+      await container.read(uploadQueueControllerProvider.notifier).addFiles(
+        'event-1',
+        [_file('beach.jpg'), _file('sunset.jpg')],
+      );
       await Future<void>.delayed(const Duration(milliseconds: 100));
     });
     await tester.pumpAndSettle();
@@ -84,9 +92,10 @@ void main() {
     final container = await _pumpJoined(tester, uploads);
 
     await tester.runAsync(() async {
-      await container
-          .read(uploadQueueControllerProvider.notifier)
-          .addFiles('event-1', [_file('bad.jpg')]);
+      await container.read(uploadQueueControllerProvider.notifier).addFiles(
+        'event-1',
+        [_file('bad.jpg')],
+      );
       await Future<void>.delayed(const Duration(milliseconds: 100));
     });
     await tester.pumpAndSettle();
@@ -108,15 +117,16 @@ void main() {
     final container = await _pumpJoined(tester, uploads);
 
     await tester.runAsync(() async {
-      await container
-          .read(uploadQueueControllerProvider.notifier)
-          .addFiles('event-1', [_file('a.jpg')]);
+      await container.read(uploadQueueControllerProvider.notifier).addFiles(
+        'event-1',
+        [_file('a.jpg')],
+      );
       await Future<void>.delayed(const Duration(milliseconds: 100));
     });
     await tester.pumpAndSettle();
 
     expect(
-      find.textContaining('This album is full'),
+      find.textContaining('This album has hit its upload limit'),
       findsOneWidget,
     );
   });
