@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../domain/upload_task.dart';
@@ -30,43 +33,66 @@ class UploadPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final queue = ref.watch(uploadQueueControllerProvider);
-    final tasks =
-        queue.tasks.where((t) => t.eventId == eventId).toList(growable: false);
+    final tasks = queue.tasks
+        .where((t) => t.eventId == eventId)
+        .toList(growable: false);
     final blocked = isFull || queue.hasBlocked;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (blocked)
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.photo_library_outlined,
-                    color: theme.colorScheme.onErrorContainer),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    'This album is full. Ask your host to upgrade the plan '
-                    'to keep the photos coming.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onErrorContainer,
+          Semantics(
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.photo_library_outlined,
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'This album has hit its upload limit. Your host can '
+                      'upgrade in seconds — new uploads unlock instantly.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onErrorContainer,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           )
-        else
+        else ...[
+          // In-app camera is mobile-only; on web the gallery picker already
+          // offers device-camera capture where the browser supports it.
+          if (!kIsWeb) ...[
+            AppButton(
+              label: 'Open camera',
+              icon: Icons.photo_camera_rounded,
+              onPressed: () => context.pushNamed(
+                AppRoute.capture,
+                pathParameters: {'eventId': eventId},
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           AppButton(
             label: 'Add photos & videos',
             icon: Icons.add_photo_alternate_rounded,
+            variant: kIsWeb
+                ? AppButtonVariant.primary
+                : AppButtonVariant.secondary,
             onPressed: () => _pickAndUpload(ref),
           ),
+        ],
         if (tasks.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
           Row(
@@ -102,8 +128,8 @@ class UploadPanel extends ConsumerWidget {
                 task: task,
                 onRetry: task.isRetryable
                     ? () => ref
-                        .read(uploadQueueControllerProvider.notifier)
-                        .retry(task.id)
+                          .read(uploadQueueControllerProvider.notifier)
+                          .retry(task.id)
                     : null,
               ),
             ),
@@ -114,8 +140,11 @@ class UploadPanel extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded,
-                      size: 18, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Flexible(
                     child: Text(

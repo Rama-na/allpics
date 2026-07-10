@@ -12,7 +12,7 @@ import '../domain/uploads_repository.dart';
 /// to the signed storage URL with byte-level progress.
 class SupabaseUploadsRepository implements UploadsRepository {
   SupabaseUploadsRepository(this._client, {http.Client? httpClient})
-      : _http = httpClient ?? http.Client();
+    : _http = httpClient ?? http.Client();
 
   final sb.SupabaseClient _client;
   final http.Client _http;
@@ -60,14 +60,10 @@ class SupabaseUploadsRepository implements UploadsRepository {
     return switch (code) {
       'quota_exceeded' => const QuotaExceededException(),
       'event_expired' => const EventExpiredException(),
-      'not_joined' ||
-      'banned' ||
-      'unauthorized' =>
-        AuthException(message ?? 'You cannot upload to this event.'),
-      'unsupported_media' ||
-      'too_large' ||
-      'rate_limited' ||
-      'bad_request' =>
+      'not_joined' || 'banned' || 'unauthorized' => AuthException(
+        message ?? 'You cannot upload to this event.',
+      ),
+      'unsupported_media' || 'too_large' || 'rate_limited' || 'bad_request' =>
         ValidationException(message ?? 'This file cannot be uploaded.'),
       _ => UnexpectedException(cause: e),
     };
@@ -86,21 +82,23 @@ class SupabaseUploadsRepository implements UploadsRepository {
       ..contentLength = bytes.length;
 
     // Feed chunks into the sink, reporting progress as we go.
-    unawaited(Future(() async {
-      var sent = 0;
-      try {
-        for (var offset = 0; offset < bytes.length; offset += _chunkSize) {
-          final end = (offset + _chunkSize).clamp(0, bytes.length);
-          request.sink.add(bytes.sublist(offset, end));
-          sent = end;
-          onProgress?.call(sent / bytes.length);
-          // Yield so the UI can paint between chunks.
-          await Future<void>.delayed(Duration.zero);
+    unawaited(
+      Future(() async {
+        var sent = 0;
+        try {
+          for (var offset = 0; offset < bytes.length; offset += _chunkSize) {
+            final end = (offset + _chunkSize).clamp(0, bytes.length);
+            request.sink.add(bytes.sublist(offset, end));
+            sent = end;
+            onProgress?.call(sent / bytes.length);
+            // Yield so the UI can paint between chunks.
+            await Future<void>.delayed(Duration.zero);
+          }
+        } finally {
+          unawaited(request.sink.close());
         }
-      } finally {
-        unawaited(request.sink.close());
-      }
-    }));
+      }),
+    );
 
     try {
       final response = await _http.send(request);
@@ -118,11 +116,15 @@ class SupabaseUploadsRepository implements UploadsRepository {
   }
 
   @override
-  Future<void> confirmUploaded(String uploadId) async {
+  Future<void> confirmUploaded(String uploadId, {String? caption}) async {
     try {
       await _client
           .from('uploads')
-          .update({'status': 'uploaded'}).eq('id', uploadId);
+          .update({
+            'status': 'uploaded',
+            if (caption != null && caption.isNotEmpty) 'caption': caption,
+          })
+          .eq('id', uploadId);
     } on sb.PostgrestException catch (e) {
       throw UnexpectedException(cause: e);
     } catch (e) {

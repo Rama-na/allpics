@@ -9,9 +9,9 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/providers.dart';
 import '../../events/providers.dart';
-import '../domain/payment_models.dart';
 import '../providers.dart';
 import 'controllers/checkout_controller.dart';
+import 'widgets/plan_card.dart';
 
 /// Plan picker + Razorpay checkout for one event.
 class PlansScreen extends ConsumerWidget {
@@ -44,11 +44,16 @@ class PlansScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_rounded,
-                    size: 72, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 72,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(height: AppSpacing.lg),
-                Text('Payment received!',
-                    style: theme.textTheme.headlineMedium),
+                Text(
+                  'Payment received!',
+                  style: theme.textTheme.headlineMedium,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Your ${checkout.planName} plan is being applied — the new '
@@ -87,38 +92,54 @@ class PlansScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(plansProvider),
         ),
         data: (plans) {
-          final currentLimit = eventAsync.value?.photoLimit ?? 0;
+          final event = eventAsync.value;
+          final currentLimit = event?.photoLimit ?? 0;
+          final sorted = [...plans]
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
+              if (event != null) ...[
+                _UsageHero(
+                  title: event.title,
+                  used: event.uploadsUsed,
+                  limit: event.photoLimit,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               Text(
-                'Guests always upload free. The photo limit applies to the '
+                'Guests always upload free. The upload limit applies to the '
                 'whole event and upgrades apply instantly after payment.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              ...plans.map((plan) {
+              ...sorted.map((plan) {
                 final isCurrent = plan.photoLimit == currentLimit;
-                final isProcessing = checkout is CheckoutProcessing &&
+                final isProcessing =
+                    checkout is CheckoutProcessing &&
                     checkout.planCode == plan.code;
+                // The free tier is where every event starts — keep it out of
+                // the way unless it is the current plan.
+                if (plan.isFree && !isCurrent) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: _PlanCard(
+                  child: PlanCard(
                     plan: plan,
                     isCurrent: isCurrent,
                     isProcessing: isProcessing,
                     onBuy: plan.isFree || isCurrent
                         ? null
                         : () => ref
-                            .read(checkoutControllerProvider.notifier)
-                            .purchase(
-                              eventId: eventId,
-                              planCode: plan.code,
-                              prefillEmail:
-                                  ref.read(currentUserProvider)?.email,
-                            ),
+                              .read(checkoutControllerProvider.notifier)
+                              .purchase(
+                                eventId: eventId,
+                                planCode: plan.code,
+                                prefillEmail: ref
+                                    .read(currentUserProvider)
+                                    ?.email,
+                              ),
                   ),
                 );
               }),
@@ -130,79 +151,53 @@ class PlansScreen extends ConsumerWidget {
   }
 }
 
-class _PlanCard extends StatelessWidget {
-  const _PlanCard({
-    required this.plan,
-    required this.isCurrent,
-    required this.isProcessing,
-    this.onBuy,
+/// Live usage meter so the host sees exactly why an upgrade helps.
+class _UsageHero extends StatelessWidget {
+  const _UsageHero({
+    required this.title,
+    required this.used,
+    required this.limit,
   });
 
-  final Plan plan;
-  final bool isCurrent;
-  final bool isProcessing;
-  final VoidCallback? onBuy;
+  final String title;
+  final int used;
+  final int limit;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final ratio = limit > 0 ? (used / limit).clamp(0.0, 1.0) : 0.0;
+    final isFull = limit > 0 && used >= limit;
+
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        side: isCurrent
-            ? BorderSide(color: theme.colorScheme.primary, width: 1.5)
-            : BorderSide.none,
-      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(plan.name, style: theme.textTheme.titleLarge),
-                ),
-                Text(plan.priceLabel, style: theme.textTheme.headlineSmall),
-              ],
+            Text(title, style: theme.textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 8,
+                color: isFull
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Icon(Icons.photo_library_outlined,
-                    size: 16, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 6),
-                Text('${plan.photoLimit} uploads',
-                    style: theme.textTheme.bodyMedium),
-                const SizedBox(width: AppSpacing.md),
-                Icon(Icons.schedule_rounded,
-                    size: 16, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 6),
-                Text('${plan.storageLabel} storage',
-                    style: theme.textTheme.bodyMedium),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (isCurrent)
-              Row(
-                children: [
-                  Icon(Icons.check_circle_rounded,
-                      size: 18, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Current plan',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              )
-            else if (!plan.isFree)
-              AppButton(
-                label: 'Get ${plan.name}',
-                isLoading: isProcessing,
-                onPressed: onBuy,
+            Text(
+              isFull
+                  ? '$used of $limit uploads used — the album is full'
+                  : '$used of $limit uploads used',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isFull
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.onSurfaceVariant,
               ),
+            ),
           ],
         ),
       ),

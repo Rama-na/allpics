@@ -152,10 +152,9 @@ class FakeEventsRepository implements EventsRepository {
   int _nextId = 1;
   bool failWrites = false;
 
-  List<Event> get _visible => _events.values
-      .where((e) => e.status != EventStatus.deleted)
-      .toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  List<Event> get _visible =>
+      _events.values.where((e) => e.status != EventStatus.deleted).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   void _emit() => _listController.add(_visible);
 
@@ -168,25 +167,24 @@ class FakeEventsRepository implements EventsRepository {
     int photoCount = 0,
     int videoCount = 0,
     int photoLimit = 10,
-  }) =>
-      Event(
-        id: id,
-        hostId: 'host-1',
-        type: type,
-        status: status,
-        title: title,
-        description: 'A test event',
-        location: 'Bengaluru',
-        eventCode: 'K3XR7P',
-        shareSlug: 'k3xr7p-abcd1234',
-        photoLimit: photoLimit,
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
-        guestCount: guestCount,
-        photoCount: photoCount,
-        videoCount: videoCount,
-        bytesUsed: 0,
-        createdAt: DateTime.now(),
-      );
+  }) => Event(
+    id: id,
+    hostId: 'host-1',
+    type: type,
+    status: status,
+    title: title,
+    description: 'A test event',
+    location: 'Bengaluru',
+    eventCode: 'K3XR7P',
+    shareSlug: 'k3xr7p-abcd1234',
+    photoLimit: photoLimit,
+    expiresAt: DateTime.now().add(const Duration(days: 30)),
+    guestCount: guestCount,
+    photoCount: photoCount,
+    videoCount: videoCount,
+    bytesUsed: 0,
+    createdAt: DateTime.now(),
+  );
 
   @override
   Stream<List<Event>> watchMyEvents() async* {
@@ -305,8 +303,7 @@ class FakeEventsRepository implements EventsRepository {
     required String eventId,
     required Uint8List bytes,
     required String fileExtension,
-  }) async =>
-      getEvent(eventId);
+  }) async => getEvent(eventId);
 
   @override
   Future<String> signedCoverUrl(String coverPath) async =>
@@ -324,6 +321,7 @@ class FakeUploadsRepository implements UploadsRepository {
   bool quotaFull = false;
 
   final confirmed = <String>[];
+  final captionsByUploadId = <String, String>{};
   int slotCounter = 0;
 
   @override
@@ -361,8 +359,11 @@ class FakeUploadsRepository implements UploadsRepository {
   }
 
   @override
-  Future<void> confirmUploaded(String uploadId) async {
+  Future<void> confirmUploaded(String uploadId, {String? caption}) async {
     confirmed.add(uploadId);
+    if (caption != null && caption.isNotEmpty) {
+      captionsByUploadId[uploadId] = caption;
+    }
   }
 }
 
@@ -381,18 +382,19 @@ class FakeAlbumRepository implements AlbumRepository {
     String guestName = 'Anita',
     bool isVideo = false,
     String caption = '',
+    String? thumbPath,
     DateTime? createdAt,
-  }) =>
-      AlbumItem(
-        id: id,
-        eventId: eventId,
-        guestId: 'guest-$guestName',
-        guestName: guestName,
-        isVideo: isVideo,
-        storagePath: 'media/$eventId/$id.jpg',
-        caption: caption,
-        createdAt: createdAt ?? DateTime(2026, 7, 1),
-      );
+  }) => AlbumItem(
+    id: id,
+    eventId: eventId,
+    guestId: 'guest-$guestName',
+    guestName: guestName,
+    isVideo: isVideo,
+    storagePath: 'media/$eventId/$id.jpg',
+    thumbPath: thumbPath,
+    caption: caption,
+    createdAt: createdAt ?? DateTime(2026, 7, 1),
+  );
 
   void addItem(AlbumItem item) {
     _items.add(item);
@@ -402,8 +404,9 @@ class FakeAlbumRepository implements AlbumRepository {
   @override
   Stream<List<AlbumItem>> watchAlbum(String eventId) async* {
     yield _items.where((i) => i.eventId == eventId).toList();
-    yield* _itemsController.stream
-        .map((all) => all.where((i) => i.eventId == eventId).toList());
+    yield* _itemsController.stream.map(
+      (all) => all.where((i) => i.eventId == eventId).toList(),
+    );
   }
 
   @override
@@ -439,10 +442,42 @@ class FakePaymentsRepository implements PaymentsRepository {
   List<Payment> history = [];
 
   static const plans = [
-    Plan(id: 'p0', code: 'free', name: 'Free', priceInr: 0, photoLimit: 10, storageDays: 30, sortOrder: 0),
-    Plan(id: 'p1', code: 'basic', name: 'Basic', priceInr: 15900, photoLimit: 100, storageDays: 30, sortOrder: 1),
-    Plan(id: 'p2', code: 'plus', name: 'Plus', priceInr: 29900, photoLimit: 500, storageDays: 30, sortOrder: 2),
-    Plan(id: 'p3', code: 'premium', name: 'Premium', priceInr: 59900, photoLimit: 1000, storageDays: 180, sortOrder: 3),
+    Plan(
+      id: 'p0',
+      code: 'free',
+      name: 'Free',
+      priceInr: 0,
+      photoLimit: 10,
+      storageDays: 30,
+      sortOrder: 0,
+    ),
+    Plan(
+      id: 'p1',
+      code: 'basic',
+      name: 'Basic',
+      priceInr: 15900,
+      photoLimit: 100,
+      storageDays: 30,
+      sortOrder: 1,
+    ),
+    Plan(
+      id: 'p2',
+      code: 'plus',
+      name: 'Plus',
+      priceInr: 29900,
+      photoLimit: 500,
+      storageDays: 30,
+      sortOrder: 2,
+    ),
+    Plan(
+      id: 'p3',
+      code: 'premium',
+      name: 'Premium',
+      priceInr: 59900,
+      photoLimit: 1000,
+      storageDays: 180,
+      sortOrder: 3,
+    ),
   ];
 
   @override
@@ -490,7 +525,7 @@ class FakeCheckoutGateway implements CheckoutGateway {
 /// In-memory [NotificationsRepository] with live read/delete semantics.
 class FakeNotificationsRepository implements NotificationsRepository {
   FakeNotificationsRepository({List<AppNotification>? initial})
-      : _items = initial ?? [];
+    : _items = initial ?? [];
 
   final List<AppNotification> _items;
   final _controller = StreamController<List<AppNotification>>.broadcast();
@@ -503,16 +538,15 @@ class FakeNotificationsRepository implements NotificationsRepository {
     String body = 'They can now add photos to the album.',
     String? eventId = 'event-1',
     bool read = false,
-  }) =>
-      AppNotification(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        data: eventId == null ? const {} : {'event_id': eventId},
-        createdAt: DateTime(2026, 7, 1, 12),
-        readAt: read ? DateTime(2026, 7, 1, 13) : null,
-      );
+  }) => AppNotification(
+    id: id,
+    type: type,
+    title: title,
+    body: body,
+    data: eventId == null ? const {} : {'event_id': eventId},
+    createdAt: DateTime(2026, 7, 1, 12),
+    readAt: read ? DateTime(2026, 7, 1, 13) : null,
+  );
 
   void _emit() => _controller.add(List.of(_items));
 
@@ -523,14 +557,14 @@ class FakeNotificationsRepository implements NotificationsRepository {
   }
 
   AppNotification _copyRead(AppNotification n) => AppNotification(
-        id: n.id,
-        type: n.type,
-        title: n.title,
-        body: n.body,
-        data: n.data,
-        createdAt: n.createdAt,
-        readAt: DateTime.now(),
-      );
+    id: n.id,
+    type: n.type,
+    title: n.title,
+    body: n.body,
+    data: n.data,
+    createdAt: n.createdAt,
+    readAt: DateTime.now(),
+  );
 
   @override
   Future<void> markRead(String notificationId) async {
@@ -635,35 +669,39 @@ class FakeAdminRepository implements AdminRepository {
 
   @override
   Future<AdminStats> fetchStats() async => const AdminStats(
-        hosts: 12,
-        eventsTotal: 20,
-        eventsActive: 15,
-        guests: 240,
-        uploads: 1800,
-        storageBytes: 5 * 1024 * 1024 * 1024,
-        revenuePaise: 449700,
-        paymentsCaptured: 17,
-        jobsQueued: 2,
-        jobsFailed: 0,
-      );
+    hosts: 12,
+    eventsTotal: 20,
+    eventsActive: 15,
+    guests: 240,
+    uploads: 1800,
+    storageBytes: 5 * 1024 * 1024 * 1024,
+    revenuePaise: 449700,
+    paymentsCaptured: 17,
+    jobsQueued: 2,
+    jobsFailed: 0,
+  );
 
   @override
   Future<List<AdminUser>> fetchUsers({String search = ''}) async => users
-      .where((u) =>
-          search.isEmpty ||
-          u.fullName.toLowerCase().contains(search.toLowerCase()) ||
-          u.email.toLowerCase().contains(search.toLowerCase()))
-      .map((u) => banned[u.id] == null
-          ? u
-          : AdminUser(
-              id: u.id,
-              fullName: u.fullName,
-              email: u.email,
-              role: u.role,
-              isBanned: banned[u.id]!,
-              eventCount: u.eventCount,
-              createdAt: u.createdAt,
-            ))
+      .where(
+        (u) =>
+            search.isEmpty ||
+            u.fullName.toLowerCase().contains(search.toLowerCase()) ||
+            u.email.toLowerCase().contains(search.toLowerCase()),
+      )
+      .map(
+        (u) => banned[u.id] == null
+            ? u
+            : AdminUser(
+                id: u.id,
+                fullName: u.fullName,
+                email: u.email,
+                role: u.role,
+                isBanned: banned[u.id]!,
+                eventCount: u.eventCount,
+                createdAt: u.createdAt,
+              ),
+      )
       .toList();
 
   @override
@@ -676,9 +714,11 @@ class FakeAdminRepository implements AdminRepository {
 
   @override
   Future<List<AdminEvent>> fetchEvents({String search = ''}) async => events
-      .where((e) =>
-          search.isEmpty ||
-          e.title.toLowerCase().contains(search.toLowerCase()))
+      .where(
+        (e) =>
+            search.isEmpty ||
+            e.title.toLowerCase().contains(search.toLowerCase()),
+      )
       .toList();
 
   @override

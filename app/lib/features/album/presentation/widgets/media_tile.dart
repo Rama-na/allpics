@@ -21,93 +21,126 @@ class MediaTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final urlAsync = ref.watch(mediaUrlProvider(item.previewPath));
+    // Videos have no renderable full-size path — only show an image when the
+    // worker has produced a thumbnail; photos always render (thumb or full).
+    final imagePath = item.isVideo ? item.thumbPath : item.previewPath;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      child: ClipRRect(
+    return Semantics(
+      button: onTap != null,
+      image: true,
+      label:
+          '${item.isVideo ? 'Video' : 'Photo'} by ${item.guestName}'
+          '${isFavorite ? ', favourite' : ''}',
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (item.isVideo)
-              Container(
-                color: theme.colorScheme.surfaceContainerHighest,
-                child: Icon(
-                  Icons.play_circle_fill_rounded,
-                  size: 40,
-                  color: theme.colorScheme.primary,
-                ),
-              )
-            else
-              urlAsync.when(
-                data: (url) => Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) =>
-                      progress == null ? child : _placeholder(theme),
-                  errorBuilder: (_, _, _) => _broken(theme),
-                ),
-                loading: () => _placeholder(theme),
-                error: (_, _) => _broken(theme),
-              ),
-            // Uploader name scrim
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.55),
-                    ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (imagePath == null)
+                Container(color: theme.colorScheme.surfaceContainerHighest)
+              else
+                ref
+                    .watch(mediaUrlProvider(imagePath))
+                    .when(
+                      data: (url) => Image.network(
+                        url,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) =>
+                            progress == null ? child : _placeholder(theme),
+                        errorBuilder: (_, _, _) => _broken(theme),
+                      ),
+                      loading: () => _placeholder(theme),
+                      error: (_, _) => _broken(theme),
+                    ),
+              if (item.isVideo)
+                Center(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black38,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 34,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                child: Text(
-                  item.guestName,
-                  style: theme.textTheme.labelSmall
-                      ?.copyWith(color: Colors.white),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              // Uploader name scrim
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.55),
+                      ],
+                    ),
+                  ),
+                  child: Text(
+                    item.guestName,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-            ),
-            if (isFavorite)
-              const Positioned(
-                top: 6,
-                right: 6,
-                child: Icon(Icons.favorite_rounded,
-                    size: 18, color: Colors.redAccent),
-              ),
-            if (!item.isReady)
-              Positioned(
-                top: 6,
-                left: 6,
-                child: Icon(Icons.hourglass_top_rounded,
-                    size: 16, color: theme.colorScheme.onSurfaceVariant),
-              ),
-          ],
+              if (isFavorite)
+                const Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    size: 18,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              if (!item.isReady)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Icon(
+                    Icons.hourglass_top_rounded,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _placeholder(ThemeData theme) => Container(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Icon(Icons.photo_outlined,
-            size: 28, color: theme.colorScheme.onSurfaceVariant),
-      );
+    color: theme.colorScheme.surfaceContainerHighest,
+    child: Icon(
+      Icons.photo_outlined,
+      size: 28,
+      color: theme.colorScheme.onSurfaceVariant,
+    ),
+  );
 
   Widget _broken(ThemeData theme) => Container(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Icon(Icons.broken_image_outlined,
-            size: 28, color: theme.colorScheme.onSurfaceVariant),
-      );
+    color: theme.colorScheme.surfaceContainerHighest,
+    child: Icon(
+      Icons.broken_image_outlined,
+      size: 28,
+      color: theme.colorScheme.onSurfaceVariant,
+    ),
+  );
 }

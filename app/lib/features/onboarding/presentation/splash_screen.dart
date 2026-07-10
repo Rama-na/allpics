@@ -5,9 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/providers.dart';
+import '../providers.dart';
 
 /// Animated brand splash. Routes by session: signed-in hosts go straight to
-/// home; everyone else sees onboarding.
+/// home; first-time users see onboarding once, everyone else the landing.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -32,14 +33,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
 
-    Future<void>.delayed(const Duration(milliseconds: 1600), () {
+    Future<void>.delayed(const Duration(milliseconds: 1600), () async {
       if (!mounted) return;
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user != null && user.isHost) {
         context.goNamed(AppRoute.home);
-      } else {
-        context.goNamed(AppRoute.onboarding);
+        return;
       }
+      final seen = await ref.read(firstRunStoreProvider).hasSeenOnboarding();
+      if (!mounted) return;
+      context.goNamed(seen ? AppRoute.landing : AppRoute.onboarding);
     });
   }
 

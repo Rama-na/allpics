@@ -7,6 +7,7 @@ import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
+import '../../payments/presentation/widgets/upgrade_sheet.dart';
 import '../domain/event.dart';
 import '../providers.dart';
 import 'controllers/event_form_controller.dart';
@@ -29,7 +30,10 @@ class EventDashboardScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, Event event) async {
+    BuildContext context,
+    WidgetRef ref,
+    Event event,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -54,9 +58,23 @@ class EventDashboardScreen extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    final ok =
-        await ref.read(eventFormControllerProvider.notifier).delete(event.id);
+    final ok = await ref
+        .read(eventFormControllerProvider.notifier)
+        .delete(event.id);
     if (ok && context.mounted) context.goNamed(AppRoute.home);
+  }
+
+  /// One-per-session contextual upgrade sheet when the album nears its limit.
+  /// Provider writes happen post-frame — mutating state during build throws.
+  void _maybeNudgeUpgrade(BuildContext context, WidgetRef ref, Event event) {
+    if (!isNearQuota(event)) return;
+    if (ref.read(upgradeNudgeShownProvider).contains(event.id)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      if (ref.read(upgradeNudgeShownProvider).contains(event.id)) return;
+      ref.read(upgradeNudgeShownProvider.notifier).mark(event.id);
+      showUpgradeSheet(context, event);
+    });
   }
 
   @override
@@ -91,162 +109,251 @@ class EventDashboardScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(eventProvider(eventId)),
         ),
       ),
-      data: (event) => Scaffold(
-        appBar: AppBar(
-          title: Text(event.title),
-          leading: BackButton(onPressed: () => context.goNamed(AppRoute.home)),
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (action) {
-                switch (action) {
-                  case 'edit':
-                    context.goNamed(
-                      AppRoute.editEvent,
-                      pathParameters: {'eventId': event.id},
-                      extra: event,
-                    );
-                  case 'delete':
-                    _confirmDelete(context, ref, event);
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
-                    title: Text('Edit event'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    leading: Icon(Icons.delete_outline_rounded),
-                    title: Text('Delete event'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
+      data: (event) {
+        _maybeNudgeUpgrade(context, ref, event);
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(event.title),
+            leading: BackButton(
+              onPressed: () => context.goNamed(AppRoute.home),
             ),
-          ],
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(eventTypeIcon(event.type),
-                            size: 18, color: theme.colorScheme.primary),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Text(
-                            [
-                              event.type.label,
-                              if (event.eventDate != null)
-                                DateFormat.yMMMMd().format(event.eventDate!),
-                              if (event.location.isNotEmpty) event.location,
-                            ].join(' · '),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+            actions: [
+              PopupMenuButton<String>(
+                onSelected: (action) {
+                  switch (action) {
+                    case 'edit':
+                      context.goNamed(
+                        AppRoute.editEvent,
+                        pathParameters: {'eventId': event.id},
+                        extra: event,
+                      );
+                    case 'delete':
+                      _confirmDelete(context, ref, event);
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: ListTile(
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text('Edit event'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline_rounded),
+                      title: Text('Delete event'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            eventTypeIcon(event.type),
+                            size: 18,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              [
+                                event.type.label,
+                                if (event.eventDate != null)
+                                  DateFormat.yMMMMd().format(event.eventDate!),
+                                if (event.location.isNotEmpty) event.location,
+                              ].join(' · '),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (isNearQuota(event)) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        _QuotaBanner(event: event),
+                      ],
+                      const SizedBox(height: AppSpacing.md),
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: AppSpacing.sm,
+                        crossAxisSpacing: AppSpacing.sm,
+                        childAspectRatio: 1.9,
+                        children: [
+                          StatTile(
+                            icon: Icons.people_outline_rounded,
+                            label: 'Guests',
+                            value: '${event.guestCount}',
+                          ),
+                          StatTile(
+                            icon: Icons.photo_library_outlined,
+                            label: 'Uploads used',
+                            value: '${event.uploadsUsed}/${event.photoLimit}',
+                            emphasize: event.isFull,
+                          ),
+                          StatTile(
+                            icon: Icons.videocam_outlined,
+                            label: 'Videos',
+                            value: '${event.videoCount}',
+                          ),
+                          StatTile(
+                            icon: Icons.cloud_outlined,
+                            label: 'Storage used',
+                            value: formatBytes(event.bytesUsed),
+                          ),
+                          StatTile(
+                            icon: Icons.photo_outlined,
+                            label: 'Uploads left',
+                            value: '${event.uploadsRemaining}',
+                            emphasize: event.uploadsRemaining == 0,
+                          ),
+                          StatTile(
+                            icon: Icons.schedule_rounded,
+                            label: 'Days until expiry',
+                            value: '${event.daysUntilExpiry}',
+                            emphasize: event.daysUntilExpiry <= 3,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton.icon(
+                        onPressed: () => context.pushNamed(
+                          AppRoute.album,
+                          pathParameters: {'eventId': event.id},
+                        ),
+                        icon: const Icon(Icons.photo_library_rounded, size: 18),
+                        label: const Text('View album'),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (isNearQuota(event))
+                        FilledButton.tonalIcon(
+                          onPressed: () => context.pushNamed(
+                            AppRoute.plans,
+                            pathParameters: {'eventId': event.id},
+                          ),
+                          icon: const Icon(
+                            Icons.workspace_premium_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('Upgrade plan'),
+                        )
+                      else
+                        OutlinedButton.icon(
+                          onPressed: () => context.pushNamed(
+                            AppRoute.plans,
+                            pathParameters: {'eventId': event.id},
+                          ),
+                          icon: const Icon(
+                            Icons.workspace_premium_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('Upgrade plan'),
+                        ),
+                      const SizedBox(height: AppSpacing.md),
+                      QrShareCard(event: event),
+                      if (event.description.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'About',
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  event.description,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: AppSpacing.sm,
-                      crossAxisSpacing: AppSpacing.sm,
-                      childAspectRatio: 1.9,
-                      children: [
-                        StatTile(
-                          icon: Icons.people_outline_rounded,
-                          label: 'Guests',
-                          value: '${event.guestCount}',
-                        ),
-                        StatTile(
-                          icon: Icons.photo_library_outlined,
-                          label: 'Uploads used',
-                          value: '${event.uploadsUsed}/${event.photoLimit}',
-                          emphasize: event.isFull,
-                        ),
-                        StatTile(
-                          icon: Icons.videocam_outlined,
-                          label: 'Videos',
-                          value: '${event.videoCount}',
-                        ),
-                        StatTile(
-                          icon: Icons.cloud_outlined,
-                          label: 'Storage used',
-                          value: formatBytes(event.bytesUsed),
-                        ),
-                        StatTile(
-                          icon: Icons.photo_outlined,
-                          label: 'Uploads left',
-                          value: '${event.uploadsRemaining}',
-                          emphasize: event.uploadsRemaining == 0,
-                        ),
-                        StatTile(
-                          icon: Icons.schedule_rounded,
-                          label: 'Days until expiry',
-                          value: '${event.daysUntilExpiry}',
-                          emphasize: event.daysUntilExpiry <= 3,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    FilledButton.icon(
-                      onPressed: () => context.pushNamed(
-                        AppRoute.album,
-                        pathParameters: {'eventId': event.id},
-                      ),
-                      icon: const Icon(Icons.photo_library_rounded, size: 18),
-                      label: const Text('View album'),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    OutlinedButton.icon(
-                      onPressed: () => context.pushNamed(
-                        AppRoute.plans,
-                        pathParameters: {'eventId': event.id},
-                      ),
-                      icon: const Icon(Icons.workspace_premium_rounded,
-                          size: 18),
-                      label: const Text('Upgrade plan'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    QrShareCard(event: event),
-                    if (event.description.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('About',
-                                  style: theme.textTheme.titleMedium),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(event.description,
-                                  style: theme.textTheme.bodyMedium),
-                            ],
-                          ),
-                        ),
-                      ),
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+/// Persistent near-quota warning with a one-tap path to the plans screen.
+class _QuotaBanner extends StatelessWidget {
+  const _QuotaBanner({required this.event});
+
+  final Event event;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isFull = event.isFull;
+    final ratio = event.photoLimit > 0
+        ? (event.uploadsUsed / event.photoLimit).clamp(0.0, 1.0)
+        : 0.0;
+    final background = isFull
+        ? theme.colorScheme.errorContainer
+        : theme.colorScheme.tertiaryContainer;
+    final foreground = isFull
+        ? theme.colorScheme.onErrorContainer
+        : theme.colorScheme.onTertiaryContainer;
+
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isFull
+                  ? 'Album full — guests can\'t upload'
+                  : '${event.uploadsUsed} of ${event.photoLimit} uploads '
+                        'used — upgrade before the album fills up',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 6,
+                color: foreground,
+                backgroundColor: foreground.withValues(alpha: 0.2),
+              ),
+            ),
+          ],
         ),
       ),
     );

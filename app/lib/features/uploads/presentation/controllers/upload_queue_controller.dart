@@ -12,10 +12,7 @@ import '../../providers.dart';
 
 /// Upload queue state: ordered tasks + processing flag.
 class UploadQueueState {
-  const UploadQueueState({
-    this.tasks = const [],
-    this.isProcessing = false,
-  });
+  const UploadQueueState({this.tasks = const [], this.isProcessing = false});
 
   final List<UploadTask> tasks;
   final bool isProcessing;
@@ -24,8 +21,7 @@ class UploadQueueState {
       tasks.where((t) => t.status == UploadTaskStatus.success).length;
   int get failedCount =>
       tasks.where((t) => t.status == UploadTaskStatus.failed).length;
-  bool get hasBlocked =>
-      tasks.any((t) => t.status == UploadTaskStatus.blocked);
+  bool get hasBlocked => tasks.any((t) => t.status == UploadTaskStatus.blocked);
   bool get allDone =>
       tasks.isNotEmpty &&
       tasks.every((t) => t.isDone || t.status == UploadTaskStatus.failed) &&
@@ -63,7 +59,12 @@ class UploadQueueController extends Notifier<UploadQueueState> {
 
   /// Adds picked files to the queue and starts uploading.
   /// Unsupported types are surfaced as failed tasks (visible, not silent).
-  Future<void> addFiles(String eventId, List<XFile> files) async {
+  /// [captionsByName] optionally attaches a caption per file name (camera).
+  Future<void> addFiles(
+    String eventId,
+    List<XFile> files, {
+    Map<String, String>? captionsByName,
+  }) async {
     final newTasks = <UploadTask>[];
     for (final file in files) {
       final mime = (file.mimeType?.isNotEmpty ?? false)
@@ -73,18 +74,21 @@ class UploadQueueController extends Notifier<UploadQueueState> {
       final size = file.path.isEmpty
           ? (await file.readAsBytes()).length
           : await File(file.path).length();
-      newTasks.add(UploadTask(
-        id: 'task-${DateTime.now().millisecondsSinceEpoch}-${_nextLocalId++}',
-        eventId: eventId,
-        fileName: file.name,
-        mimeType: mime,
-        totalBytes: size,
-        kind: mediaKindForMime(mime),
-        filePath: file.path.isEmpty ? null : file.path,
-        inMemoryBytes: file.path.isEmpty ? await file.readAsBytes() : null,
-        status: supported ? UploadTaskStatus.queued : UploadTaskStatus.failed,
-        error: supported ? null : 'This file type is not supported.',
-      ));
+      newTasks.add(
+        UploadTask(
+          id: 'task-${DateTime.now().millisecondsSinceEpoch}-${_nextLocalId++}',
+          eventId: eventId,
+          fileName: file.name,
+          mimeType: mime,
+          totalBytes: size,
+          kind: mediaKindForMime(mime),
+          filePath: file.path.isEmpty ? null : file.path,
+          inMemoryBytes: file.path.isEmpty ? await file.readAsBytes() : null,
+          caption: captionsByName?[file.name] ?? '',
+          status: supported ? UploadTaskStatus.queued : UploadTaskStatus.failed,
+          error: supported ? null : 'This file type is not supported.',
+        ),
+      );
     }
     state = state.copyWith(tasks: [...state.tasks, ...newTasks]);
     await _persist();
@@ -93,8 +97,10 @@ class UploadQueueController extends Notifier<UploadQueueState> {
 
   /// Re-queues one failed task.
   void retry(String taskId) {
-    _update(taskId,
-        (t) => t.copyWith(status: UploadTaskStatus.queued, clearError: true));
+    _update(
+      taskId,
+      (t) => t.copyWith(status: UploadTaskStatus.queued, clearError: true),
+    );
     _pump();
   }
 
@@ -159,7 +165,7 @@ class UploadQueueController extends Notifier<UploadQueueState> {
         mimeType: task.mimeType,
         onProgress: (p) => _update(taskId, (t) => t.copyWith(progress: p)),
       );
-      await repo.confirmUploaded(slot.uploadId);
+      await repo.confirmUploaded(slot.uploadId, caption: task.caption);
       _update(
         taskId,
         (t) => t.copyWith(status: UploadTaskStatus.success, progress: 1),
@@ -201,13 +207,15 @@ class UploadQueueController extends Notifier<UploadQueueState> {
     final path = task.filePath;
     if (path == null) {
       throw const ValidationException(
-          'This file is no longer available — pick it again.');
+        'This file is no longer available — pick it again.',
+      );
     }
     try {
       return await File(path).readAsBytes();
     } on FileSystemException {
       throw const ValidationException(
-          'This file is no longer available — pick it again.');
+        'This file is no longer available — pick it again.',
+      );
     }
   }
 
@@ -230,4 +238,5 @@ class UploadQueueController extends Notifier<UploadQueueState> {
 
 final uploadQueueControllerProvider =
     NotifierProvider<UploadQueueController, UploadQueueState>(
-        UploadQueueController.new);
+      UploadQueueController.new,
+    );

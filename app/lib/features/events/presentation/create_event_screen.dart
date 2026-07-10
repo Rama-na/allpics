@@ -11,6 +11,8 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../auth/presentation/widgets/auth_sheet.dart';
+import '../../auth/providers.dart';
 import '../domain/event.dart';
 import 'controllers/event_form_controller.dart';
 import 'widgets/event_card.dart';
@@ -78,12 +80,26 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     final ext = file.name.split('.').last.toLowerCase();
     setState(() {
       _coverBytes = bytes;
-      _coverExtension = ['jpg', 'jpeg', 'png', 'webp'].contains(ext) ? ext : 'jpg';
+      _coverExtension = ['jpg', 'jpeg', 'png', 'webp'].contains(ext)
+          ? ext
+          : 'jpg';
     });
+  }
+
+  /// Try-first: the wizard is open to everyone; a host account is required
+  /// only at the moment of publishing. The form survives under the modal.
+  Future<bool> _ensureHostSession() async {
+    final user = ref.read(currentUserProvider);
+    if (user != null && user.isHost) return true;
+    return showAuthSheet(context);
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!widget.isEditing) {
+      final ok = await _ensureHostSession();
+      if (!ok || !mounted) return;
+    }
     final draft = EventDraft(
       type: _type,
       title: _title.text,
@@ -130,10 +146,20 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       appBar: AppBar(
         title: Text(widget.isEditing ? 'Edit event' : 'Create event'),
         leading: BackButton(
-          onPressed: () => widget.isEditing
-              ? context.goNamed(AppRoute.eventDashboard,
-                  pathParameters: {'eventId': widget.existing!.id})
-              : context.goNamed(AppRoute.home),
+          onPressed: () {
+            if (widget.isEditing) {
+              context.goNamed(
+                AppRoute.eventDashboard,
+                pathParameters: {'eventId': widget.existing!.id},
+              );
+              return;
+            }
+            // Signed-out visitors came from the landing page; hosts from home.
+            final user = ref.read(currentUserProvider);
+            context.goNamed(
+              user != null && user.isHost ? AppRoute.home : AppRoute.landing,
+            );
+          },
         ),
       ),
       body: SafeArea(
@@ -177,7 +203,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                       hint: "e.g. Priya & Rahul's Wedding",
                       validator: (v) => (v == null || v.trim().isEmpty)
                           ? 'Title is required.'
-                          : (v.trim().length > 120 ? 'Title is too long.' : null),
+                          : (v.trim().length > 120
+                                ? 'Title is too long.'
+                                : null),
                       textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.next,
                       enabled: !isLoading,
@@ -214,8 +242,10 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    Text('Cover image (optional)',
-                        style: theme.textTheme.titleSmall),
+                    Text(
+                      'Cover image (optional)',
+                      style: theme.textTheme.titleSmall,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [
@@ -223,9 +253,11 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                           child: OutlinedButton.icon(
                             onPressed: isLoading ? null : _pickCover,
                             icon: const Icon(Icons.image_outlined, size: 18),
-                            label: Text(_coverBytes == null
-                                ? 'Choose from gallery'
-                                : 'Cover selected'),
+                            label: Text(
+                              _coverBytes == null
+                                  ? 'Choose from gallery'
+                                  : 'Cover selected',
+                            ),
                           ),
                         ),
                         if (_coverBytes != null) ...[
@@ -243,8 +275,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                     if (_coverBytes != null) ...[
                       const SizedBox(height: AppSpacing.sm),
                       ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
                         child: Image.memory(
                           _coverBytes!,
                           height: 140,

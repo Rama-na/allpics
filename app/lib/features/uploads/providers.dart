@@ -22,8 +22,7 @@ class _UnconfiguredUploadsRepository implements UploadsRepository {
     required String fileName,
     required String mimeType,
     required int bytes,
-  }) async =>
-      throw _error;
+  }) async => throw _error;
 
   @override
   Future<void> uploadBytes({
@@ -31,11 +30,11 @@ class _UnconfiguredUploadsRepository implements UploadsRepository {
     required Uint8List bytes,
     required String mimeType,
     void Function(double progress)? onProgress,
-  }) async =>
-      throw _error;
+  }) async => throw _error;
 
   @override
-  Future<void> confirmUploaded(String uploadId) async => throw _error;
+  Future<void> confirmUploaded(String uploadId, {String? caption}) async =>
+      throw _error;
 }
 
 final uploadsRepositoryProvider = Provider<UploadsRepository>((ref) {

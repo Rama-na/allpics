@@ -6,35 +6,42 @@ import 'package:allpics/features/guest/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/fakes.dart';
 
 Future<(FakeAuthRepository, FakeJoinRepository)> _pumpToJoin(
-    WidgetTester tester) async {
+  WidgetTester tester,
+) async {
+  SharedPreferences.setMockInitialValues({});
   final auth = FakeAuthRepository();
   final join = FakeJoinRepository(auth: auth);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      joinRepositoryProvider.overrideWithValue(join),
-    ],
-    child: const AllPicsApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        joinRepositoryProvider.overrideWithValue(join),
+      ],
+      child: const AllPicsApp(),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 1700));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Skip'));
   await tester.pumpAndSettle();
-  await tester.ensureVisible(find.text('Joining an event? Enter code'));
+  // Landing promotes joining to a first-class action.
+  await tester.ensureVisible(find.text('Join an event'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Joining an event? Enter code'));
+  await tester.tap(find.text('Join an event'));
   await tester.pumpAndSettle();
   expect(find.byType(JoinEventScreen), findsOneWidget);
   return (auth, join);
 }
 
 void main() {
-  testWidgets('guest joins with code → preview → name → joined screen',
-      (tester) async {
+  testWidgets('guest joins with code → preview → name → joined screen', (
+    tester,
+  ) async {
     final (auth, _) = await _pumpToJoin(tester);
 
     await tester.enterText(find.byType(TextFormField), 'K3XR7P');

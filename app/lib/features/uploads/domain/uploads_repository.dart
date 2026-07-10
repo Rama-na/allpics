@@ -15,11 +15,11 @@ class UploadSlot {
   final String token;
 
   factory UploadSlot.fromMap(Map<String, dynamic> map) => UploadSlot(
-        uploadId: map['upload_id'] as String,
-        storagePath: map['storage_path'] as String,
-        signedUrl: map['signed_url'] as String,
-        token: map['token'] as String,
-      );
+    uploadId: map['upload_id'] as String,
+    storagePath: map['storage_path'] as String,
+    signedUrl: map['signed_url'] as String,
+    token: map['token'] as String,
+  );
 }
 
 /// Upload transport contract.
@@ -42,6 +42,7 @@ abstract interface class UploadsRepository {
     void Function(double progress)? onProgress,
   });
 
-  /// Confirms the upload server-side (`status = uploaded`).
-  Future<void> confirmUploaded(String uploadId);
+  /// Confirms the upload server-side (`status = uploaded`), optionally
+  /// attaching a caption (in-app camera captures).
+  Future<void> confirmUploaded(String uploadId, {String? caption});
 }
