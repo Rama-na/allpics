@@ -62,8 +62,8 @@ void main() {
       final free = FakePaymentsRepository.plans.firstWhere(
         (p) => p.code == 'free',
       );
-      expect(basic.perUploadLabel, '₹1.6/upload');
-      expect(plus.perUploadLabel, '₹0.60/upload');
+      expect(basic.perUploadLabel, '₹0.40/upload');
+      expect(plus.perUploadLabel, '₹0.20/upload');
       expect(free.perUploadLabel, isEmpty);
     });
 
@@ -89,8 +89,7 @@ void main() {
     expect(find.text('3 of 10 uploads used'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('MOST POPULAR'), 300);
     expect(find.text('MOST POPULAR'), findsOneWidget);
-    // Plus (and possibly Premium, once built) share the ₹0.60 framing.
-    expect(find.text('₹0.60/upload'), findsWidgets);
+    expect(find.text('₹0.20/upload'), findsWidgets);
   });
 
   testWidgets('dashboard nudges the upgrade sheet once when nearly full', (

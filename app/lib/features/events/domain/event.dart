@@ -56,6 +56,7 @@ class Event {
     required this.createdAt,
     this.eventDate,
     this.coverPath,
+    this.planId,
   });
 
   final String id;
@@ -76,6 +77,9 @@ class Event {
   final int videoCount;
   final int bytesUsed;
   final DateTime createdAt;
+
+  /// The event's plan row id (nullable for legacy fakes/cached rows).
+  final String? planId;
 
   int get uploadsUsed => photoCount + videoCount;
   int get uploadsRemaining =>
@@ -113,6 +117,7 @@ class Event {
         videoCount: (map['video_count'] as num?)?.toInt() ?? 0,
         bytesUsed: (map['bytes_used'] as num?)?.toInt() ?? 0,
         createdAt: DateTime.parse(map['created_at'] as String),
+        planId: map['plan_id'] as String?,
       );
 }
 

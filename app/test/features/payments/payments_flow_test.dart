@@ -50,15 +50,15 @@ void main() {
     await _pumpPlans(tester);
 
     expect(find.text('Basic'), findsOneWidget);
-    expect(find.text('₹159'), findsOneWidget);
-    // Event is on the 10-photo free plan.
+    expect(find.text('₹199'), findsOneWidget);
+    // Event carries the free plan id (p0) → marked current.
     expect(find.text('Current plan'), findsOneWidget);
     expect(find.text('Get Basic'), findsOneWidget);
 
     // Lower plans render after scrolling.
     await tester.scrollUntilVisible(find.text('Premium'), 300);
     expect(find.text('Premium'), findsOneWidget);
-    expect(find.text('₹599'), findsOneWidget);
+    expect(find.text('₹799'), findsOneWidget);
   });
 
   testWidgets('successful checkout shows the success state and returns',

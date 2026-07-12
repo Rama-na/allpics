@@ -43,3 +43,15 @@ class UnexpectedException extends AppException {
   const UnexpectedException({Object? cause})
       : super('Something went wrong. Please try again.', cause: cause);
 }
+
+/// The backend is reachable but not fully provisioned (e.g. the plan catalog
+/// was never seeded). Distinct from [UnexpectedException] so setup problems
+/// are actionable instead of a generic shrug.
+class BackendNotProvisionedException extends AppException {
+  const BackendNotProvisionedException({Object? cause})
+      : super(
+          "The app's plan catalog is missing — the backend isn't fully "
+          'provisioned yet. Run the database migrations and try again.',
+          cause: cause,
+        );
+}

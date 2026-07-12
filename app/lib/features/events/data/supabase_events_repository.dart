@@ -1,11 +1,32 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/errors/app_exception.dart';
 import '../../../core/utils/app_logger.dart';
 import '../domain/event.dart';
 import '../domain/events_repository.dart';
+
+/// Maps a failed free-plan lookup to a user-actionable exception.
+/// PGRST116 = `.single()` matched no row → the plan catalog was never
+/// provisioned (hosted `db push` does not run seed.sql).
+@visibleForTesting
+AppException mapPlanLookupError(sb.PostgrestException e) =>
+    e.code == 'PGRST116'
+        ? BackendNotProvisionedException(cause: e)
+        : UnexpectedException(cause: e);
+
+/// Maps a failed event insert to a user-actionable exception.
+/// 42501 = RLS rejected the row — `events_insert_host` requires a `profiles`
+/// row, which is missing for accounts created before migrations were pushed.
+@visibleForTesting
+AppException mapCreateEventError(sb.PostgrestException e) =>
+    e.code == '42501'
+        ? AuthException(
+            'Your account profile is missing. Sign out and back in, '
+            'or contact support.',
+            cause: e,
+          )
+        : UnexpectedException(cause: e);
 
 /// Production [EventsRepository] backed by Supabase (PostgREST + Realtime +
 /// Storage). All access is RLS-guarded; hosts only ever see their own rows.
@@ -75,7 +96,7 @@ class SupabaseEventsRepository implements EventsRepository {
           .single();
       return row['id'] as String;
     } on sb.PostgrestException catch (e) {
-      throw UnexpectedException(cause: e);
+      throw mapPlanLookupError(e);
     }
   }
 
@@ -102,7 +123,7 @@ class SupabaseEventsRepository implements EventsRepository {
       rethrow;
     } on sb.PostgrestException catch (e) {
       _log.warning('create failed: ${e.code} ${e.message}');
-      throw UnexpectedException(cause: e);
+      throw mapCreateEventError(e);
     } catch (e) {
       throw const NetworkException();
     }

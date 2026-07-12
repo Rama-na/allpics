@@ -295,8 +295,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                     if (!widget.isEditing) ...[
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Starts on the Free plan (10 uploads, 30 days). '
-                        'Upgrade anytime.',
+                        'Starts on the Free plan (100 uploads, 7 days). '
+                        'Upgrade anytime to keep the album longer.',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

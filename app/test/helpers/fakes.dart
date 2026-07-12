@@ -167,6 +167,8 @@ class FakeEventsRepository implements EventsRepository {
     int photoCount = 0,
     int videoCount = 0,
     int photoLimit = 10,
+    String? planId = 'p0',
+    DateTime? expiresAt,
   }) => Event(
     id: id,
     hostId: 'host-1',
@@ -178,12 +180,13 @@ class FakeEventsRepository implements EventsRepository {
     eventCode: 'K3XR7P',
     shareSlug: 'k3xr7p-abcd1234',
     photoLimit: photoLimit,
-    expiresAt: DateTime.now().add(const Duration(days: 30)),
+    expiresAt: expiresAt ?? DateTime.now().add(const Duration(days: 30)),
     guestCount: guestCount,
     photoCount: photoCount,
     videoCount: videoCount,
     bytesUsed: 0,
     createdAt: DateTime.now(),
+    planId: planId,
   );
 
   @override
@@ -231,8 +234,10 @@ class FakeEventsRepository implements EventsRepository {
       location: draft.location.trim(),
       eventCode: 'CODE$_nextId'.padRight(6, 'X').substring(0, 6),
       shareSlug: 'code$_nextId-slug',
-      photoLimit: 10,
-      expiresAt: DateTime.now().add(const Duration(days: 30)),
+      // Free-plan defaults (mirrors trigger handle_new_event + catalog).
+      photoLimit: 100,
+      planId: 'p0',
+      expiresAt: DateTime.now().add(const Duration(days: 7)),
       guestCount: 0,
       photoCount: 0,
       videoCount: 0,
@@ -441,22 +446,23 @@ class FakePaymentsRepository implements PaymentsRepository {
   final orders = <(String eventId, String planCode)>[];
   List<Payment> history = [];
 
+  // Mirrors the production catalog (seed.sql / migration 0009).
   static const plans = [
     Plan(
       id: 'p0',
       code: 'free',
       name: 'Free',
       priceInr: 0,
-      photoLimit: 10,
-      storageDays: 30,
+      photoLimit: 100,
+      storageDays: 7,
       sortOrder: 0,
     ),
     Plan(
       id: 'p1',
       code: 'basic',
       name: 'Basic',
-      priceInr: 15900,
-      photoLimit: 100,
+      priceInr: 19900,
+      photoLimit: 500,
       storageDays: 30,
       sortOrder: 1,
     ),
@@ -464,18 +470,18 @@ class FakePaymentsRepository implements PaymentsRepository {
       id: 'p2',
       code: 'plus',
       name: 'Plus',
-      priceInr: 29900,
-      photoLimit: 500,
-      storageDays: 30,
+      priceInr: 39900,
+      photoLimit: 2000,
+      storageDays: 90,
       sortOrder: 2,
     ),
     Plan(
       id: 'p3',
       code: 'premium',
       name: 'Premium',
-      priceInr: 59900,
-      photoLimit: 1000,
-      storageDays: 180,
+      priceInr: 79900,
+      photoLimit: 5000,
+      storageDays: 365,
       sortOrder: 3,
     ),
   ];

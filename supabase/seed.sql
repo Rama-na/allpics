@@ -1,12 +1,18 @@
 -- AllPics · seed.sql
 -- Plan catalog (prices in paise) + default feature flags.
+-- NOTE: kept in sync with migrations/0009_provisioning_backfill.sql — hosted
+-- `supabase db push` never runs seeds, so the catalog also lives in a
+-- migration. Update BOTH files when the catalog changes.
+--
+-- Catalog philosophy: free tier covers a real party (generous uploads) but
+-- gates on TIME; paid tiers sell retention and AI keepsakes.
 
 insert into public.plans (code, name, price_inr, photo_limit, storage_days, is_active, sort_order)
 values
-  ('free',    'Free',    0,     10,   30,  true, 0),
-  ('basic',   'Basic',   15900, 100,  30,  true, 1),
-  ('plus',    'Plus',    29900, 500,  30,  true, 2),
-  ('premium', 'Premium', 59900, 1000, 180, true, 3)
+  ('free',    'Free',    0,     100,  7,   true, 0),
+  ('basic',   'Basic',   19900, 500,  30,  true, 1),
+  ('plus',    'Plus',    39900, 2000, 90,  true, 2),
+  ('premium', 'Premium', 79900, 5000, 365, true, 3)
 on conflict (code) do update set
   name = excluded.name,
   price_inr = excluded.price_inr,
