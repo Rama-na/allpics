@@ -205,6 +205,14 @@ class FakeEventsRepository implements EventsRepository {
   @override
   Future<List<Event>> fetchJoinedEvents() async => List.of(joinedEvents);
 
+  /// (eventId, jobType) pairs queued via [enqueueKeepsakeJob].
+  final keepsakeJobs = <(String, String)>[];
+
+  @override
+  Future<void> enqueueKeepsakeJob(String eventId, String jobType) async {
+    keepsakeJobs.add((eventId, jobType));
+  }
+
   @override
   Stream<Event> watchEvent(String eventId) async* {
     final event = _events[eventId];

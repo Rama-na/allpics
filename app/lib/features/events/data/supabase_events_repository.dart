@@ -10,23 +10,21 @@ import '../domain/events_repository.dart';
 /// PGRST116 = `.single()` matched no row → the plan catalog was never
 /// provisioned (hosted `db push` does not run seed.sql).
 @visibleForTesting
-AppException mapPlanLookupError(sb.PostgrestException e) =>
-    e.code == 'PGRST116'
-        ? BackendNotProvisionedException(cause: e)
-        : UnexpectedException(cause: e);
+AppException mapPlanLookupError(sb.PostgrestException e) => e.code == 'PGRST116'
+    ? BackendNotProvisionedException(cause: e)
+    : UnexpectedException(cause: e);
 
 /// Maps a failed event insert to a user-actionable exception.
 /// 42501 = RLS rejected the row — `events_insert_host` requires a `profiles`
 /// row, which is missing for accounts created before migrations were pushed.
 @visibleForTesting
-AppException mapCreateEventError(sb.PostgrestException e) =>
-    e.code == '42501'
-        ? AuthException(
-            'Your account profile is missing. Sign out and back in, '
-            'or contact support.',
-            cause: e,
-          )
-        : UnexpectedException(cause: e);
+AppException mapCreateEventError(sb.PostgrestException e) => e.code == '42501'
+    ? AuthException(
+        'Your account profile is missing. Sign out and back in, '
+        'or contact support.',
+        cause: e,
+      )
+    : UnexpectedException(cause: e);
 
 /// Production [EventsRepository] backed by Supabase (PostgREST + Realtime +
 /// Storage). All access is RLS-guarded; hosts only ever see their own rows.
@@ -51,10 +49,12 @@ class SupabaseEventsRepository implements EventsRepository {
         .stream(primaryKey: ['id'])
         .eq('host_id', _uid)
         .order('created_at')
-        .map((rows) => rows
-            .map(Event.fromMap)
-            .where((e) => e.status != EventStatus.deleted)
-            .toList());
+        .map(
+          (rows) => rows
+              .map(Event.fromMap)
+              .where((e) => e.status != EventStatus.deleted)
+              .toList(),
+        );
   }
 
   @override
@@ -82,6 +82,26 @@ class SupabaseEventsRepository implements EventsRepository {
   }
 
   @override
+  Future<void> enqueueKeepsakeJob(String eventId, String jobType) async {
+    try {
+      await _client.rpc<void>(
+        'enqueue_event_job',
+        params: {'p_event_id': eventId, 'p_job_type': jobType},
+      );
+    } on sb.PostgrestException catch (e) {
+      if (e.message.contains('JOB_ALREADY_QUEUED')) {
+        throw const ValidationException(
+          'Already working on it — this keepsake is in the queue.',
+        );
+      }
+      _log.warning('keepsake enqueue failed: ${e.code} ${e.message}');
+      throw UnexpectedException(cause: e);
+    } catch (e) {
+      throw const NetworkException();
+    }
+  }
+
+  @override
   Stream<Event> watchEvent(String eventId) {
     return _client
         .from('events')
@@ -98,8 +118,11 @@ class SupabaseEventsRepository implements EventsRepository {
   @override
   Future<Event> getEvent(String eventId) async {
     try {
-      final row =
-          await _client.from('events').select().eq('id', eventId).single();
+      final row = await _client
+          .from('events')
+          .select()
+          .eq('id', eventId)
+          .single();
       return Event.fromMap(row);
     } on sb.PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
@@ -181,7 +204,8 @@ class SupabaseEventsRepository implements EventsRepository {
     try {
       await _client
           .from('events')
-          .update({'status': 'deleted'}).eq('id', eventId);
+          .update({'status': 'deleted'})
+          .eq('id', eventId);
     } on sb.PostgrestException catch (e) {
       throw UnexpectedException(cause: e);
     } catch (e) {
@@ -197,7 +221,9 @@ class SupabaseEventsRepository implements EventsRepository {
   }) async {
     final path = '$eventId/cover.$fileExtension';
     try {
-      await _client.storage.from('covers').uploadBinary(
+      await _client.storage
+          .from('covers')
+          .uploadBinary(
             path,
             bytes,
             fileOptions: const sb.FileOptions(upsert: true),

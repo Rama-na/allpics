@@ -59,6 +59,12 @@ void main() {
     expect(find.textContaining("You're in, Anita!"), findsOneWidget);
     // Anonymous session was created for the guest.
     expect(auth.currentUser?.isAnonymous, isTrue);
+    // Guest→host growth loop CTA is present.
+    await tester.scrollUntilVisible(
+      find.text('Create your own event — free'),
+      300,
+    );
+    expect(find.text('Create your own event — free'), findsOneWidget);
     auth.dispose();
   });
 

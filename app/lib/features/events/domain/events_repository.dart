@@ -35,4 +35,9 @@ abstract interface class EventsRepository {
 
   /// Short-lived signed URL for a private cover path.
   Future<String> signedCoverUrl(String coverPath);
+
+  /// Queues an AI keepsake job ('highlights' or 'slideshow') for an event
+  /// the caller hosts. Server-side dedup: re-queuing while one is pending
+  /// throws a [ValidationException].
+  Future<void> enqueueKeepsakeJob(String eventId, String jobType);
 }

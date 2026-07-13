@@ -45,11 +45,14 @@ class _UnconfiguredEventsRepository implements EventsRepository {
     required String eventId,
     required Uint8List bytes,
     required String fileExtension,
-  }) async =>
-      throw _error;
+  }) async => throw _error;
 
   @override
   Future<String> signedCoverUrl(String coverPath) async => throw _error;
+
+  @override
+  Future<void> enqueueKeepsakeJob(String eventId, String jobType) async =>
+      throw _error;
 }
 
 final eventsRepositoryProvider = Provider<EventsRepository>((ref) {

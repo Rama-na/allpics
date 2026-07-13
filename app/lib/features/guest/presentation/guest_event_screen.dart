@@ -147,10 +147,47 @@ class _GuestEventView extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   UploadPanel(eventId: event.id, isFull: event.isFull),
+                  const SizedBox(height: AppSpacing.xl),
+                  const CreateYourOwnCard(),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Guest→host growth loop: every guest is a future host.
+class CreateYourOwnCard extends StatelessWidget {
+  const CreateYourOwnCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Love this album?', style: theme.textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Create your own event in under a minute — free for 100 '
+              'uploads, no card needed.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.tonalIcon(
+              onPressed: () => context.pushNamed(AppRoute.createEvent),
+              icon: const Icon(Icons.add_a_photo_rounded, size: 18),
+              label: const Text('Create your own event — free'),
+            ),
+          ],
         ),
       ),
     );

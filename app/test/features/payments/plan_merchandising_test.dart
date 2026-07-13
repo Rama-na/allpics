@@ -13,9 +13,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/fakes.dart';
 
-Future<void> _pumpDashboard(
+Future<FakeEventsRepository> _pumpDashboard(
   WidgetTester tester, {
   required int photoCount,
+  String? planId = 'p0',
 }) async {
   SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
   final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
@@ -25,6 +26,7 @@ Future<void> _pumpDashboard(
         title: 'Goa Trip',
         photoCount: photoCount,
         photoLimit: 10,
+        planId: planId,
       ),
     ],
   );
@@ -45,6 +47,7 @@ Future<void> _pumpDashboard(
   await tester.pumpAndSettle();
   await tester.tap(find.text('Goa Trip'));
   await tester.pumpAndSettle();
+  return events;
 }
 
 void main() {
@@ -133,5 +136,50 @@ void main() {
 
     expect(find.textContaining('Your album is'), findsNothing);
     expect(find.textContaining('upgrade before the album fills'), findsNothing);
+  });
+
+  testWidgets('keepsakes are locked on a free event and lead to plans', (
+    tester,
+  ) async {
+    await _pumpDashboard(tester, photoCount: 0); // planId defaults to free
+
+    await tester.ensureVisible(find.text('AI keepsakes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unlock with Plus'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Unlock with Plus'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unlock with Plus'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PlansScreen), findsOneWidget);
+  });
+
+  testWidgets('keepsakes are actionable on Plus and enqueue jobs', (
+    tester,
+  ) async {
+    final events = await _pumpDashboard(
+      tester,
+      photoCount: 0,
+      planId: 'p2', // Plus
+    );
+
+    await tester.ensureVisible(find.text('AI keepsakes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unlock with Plus'), findsNothing);
+
+    await tester.ensureVisible(find.text('Highlights'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Highlights'));
+    await tester.pumpAndSettle();
+    expect(find.text('Highlights queued'), findsOneWidget);
+
+    await tester.tap(find.text('Slideshow'));
+    await tester.pumpAndSettle();
+    expect(find.text('Slideshow queued'), findsOneWidget);
+
+    expect(events.keepsakeJobs, [
+      ('event-1', 'highlights'),
+      ('event-1', 'slideshow'),
+    ]);
   });
 }

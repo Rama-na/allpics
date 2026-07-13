@@ -8,6 +8,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/shimmer.dart';
 import '../../../shared/widgets/state_views.dart';
+import '../../auth/providers.dart';
 import '../domain/album_item.dart';
 import '../providers.dart';
 import 'controllers/album_view_controller.dart';
@@ -67,6 +68,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     final itemsAsync = ref.watch(albumItemsProvider(widget.eventId));
     final favorites = ref.watch(favoriteIdsProvider).value ?? const <String>{};
     final view = ref.watch(albumViewControllerProvider);
+    final user = ref.watch(currentUserProvider);
+    final isHost = user != null && user.isHost;
 
     return Scaffold(
       appBar: AppBar(
@@ -215,15 +218,29 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            child: itemsAsync.when(
-              data: (items) => Text(
-                '${items.length} item${items.length == 1 ? '' : 's'} · updates live',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+            child: Column(
+              children: [
+                itemsAsync.when(
+                  data: (items) => Text(
+                    '${items.length} item${items.length == 1 ? '' : 's'} · updates live',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
-              ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
+                // Guest→host loop: guests browsing the album are the next
+                // hosts. Hosts don't need the pitch.
+                if (!isHost)
+                  TextButton.icon(
+                    onPressed: () => context.pushNamed(AppRoute.createEvent),
+                    icon: const Icon(Icons.add_a_photo_rounded, size: 16),
+                    label: const Text(
+                      'Love this album? Create your own — free',
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
