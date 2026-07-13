@@ -152,6 +152,9 @@ class FakeEventsRepository implements EventsRepository {
   int _nextId = 1;
   bool failWrites = false;
 
+  /// Events the fake user "joined as a guest" — settable per test.
+  List<Event> joinedEvents = [];
+
   List<Event> get _visible =>
       _events.values.where((e) => e.status != EventStatus.deleted).toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -194,6 +197,9 @@ class FakeEventsRepository implements EventsRepository {
     yield _visible;
     yield* _listController.stream;
   }
+
+  @override
+  Future<List<Event>> fetchJoinedEvents() async => List.of(joinedEvents);
 
   @override
   Stream<Event> watchEvent(String eventId) async* {

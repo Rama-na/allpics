@@ -58,6 +58,30 @@ class SupabaseEventsRepository implements EventsRepository {
   }
 
   @override
+  Future<List<Event>> fetchJoinedEvents() async {
+    try {
+      // Embedded select through the FK: one round trip, RLS-filtered on both
+      // tables (own membership rows; member-visible events).
+      final rows = await _client
+          .from('event_guests')
+          .select('joined_at, events!inner(*)')
+          .eq('auth_user_id', _uid)
+          .order('joined_at', ascending: false);
+      return rows
+          .map((row) => Event.fromMap(row['events'] as Map<String, dynamic>))
+          .where((e) => e.status != EventStatus.deleted)
+          .toList();
+    } on AppException {
+      rethrow;
+    } on sb.PostgrestException catch (e) {
+      _log.warning('joined-events fetch failed: ${e.code} ${e.message}');
+      throw UnexpectedException(cause: e);
+    } catch (e) {
+      throw const NetworkException();
+    }
+  }
+
+  @override
   Stream<Event> watchEvent(String eventId) {
     return _client
         .from('events')

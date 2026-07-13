@@ -21,6 +21,9 @@ class _UnconfiguredEventsRepository implements EventsRepository {
   Stream<List<Event>> watchMyEvents() => Stream.value(const []);
 
   @override
+  Future<List<Event>> fetchJoinedEvents() async => const [];
+
+  @override
   Stream<Event> watchEvent(String eventId) =>
       Stream.error(const NotFoundException('Backend not configured.'));
 

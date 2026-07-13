@@ -81,6 +81,15 @@ class CaptureController extends Notifier<CaptureState> {
     return const CaptureState();
   }
 
+  /// Releases the camera without disposing the notifier. The shell calls
+  /// this when the viewfinder page is left (battery + iOS backgrounding).
+  Future<void> shutdown() async {
+    final camera = _camera;
+    _camera = null;
+    state = const CaptureState();
+    await camera?.dispose();
+  }
+
   Future<void> initialize() async {
     state = const CaptureState();
     try {

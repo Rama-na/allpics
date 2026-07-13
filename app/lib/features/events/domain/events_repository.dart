@@ -8,6 +8,10 @@ abstract interface class EventsRepository {
   /// deleted excluded). Emits on every counter change.
   Stream<List<Event>> watchMyEvents();
 
+  /// Events the current user joined as a guest (newest join first).
+  /// One-shot fetch — callers refresh via pull-to-refresh.
+  Future<List<Event>> fetchJoinedEvents();
+
   /// Live single event (dashboard counters).
   Stream<Event> watchEvent(String eventId);
 
