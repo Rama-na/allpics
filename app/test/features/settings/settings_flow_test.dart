@@ -13,22 +13,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../helpers/fakes.dart';
 
 Future<(FakeProfileRepository, FakeAuthRepository)> _pumpSettings(
-    WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({});
+  WidgetTester tester,
+) async {
+  SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
   final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
   final events = FakeEventsRepository();
   final profile = FakeProfileRepository();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      eventsRepositoryProvider.overrideWithValue(events),
-      profileRepositoryProvider.overrideWithValue(profile),
-    ],
-    child: const AllPicsApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        eventsRepositoryProvider.overrideWithValue(events),
+        profileRepositoryProvider.overrideWithValue(profile),
+      ],
+      child: const AllPicsApp(),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 1700));
   await tester.pumpAndSettle();
-  await tester.tap(find.byTooltip('Settings'));
+  await tester.tap(find.byTooltip('Profile'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Settings'));
   await tester.pumpAndSettle();
   expect(find.byType(SettingsScreen), findsOneWidget);
   return (profile, auth);
@@ -51,8 +56,9 @@ void main() {
     expect(find.text('Priya S'), findsOneWidget);
   });
 
-  testWidgets('theme toggle applies dark mode instantly and syncs profile',
-      (tester) async {
+  testWidgets('theme toggle applies dark mode instantly and syncs profile', (
+    tester,
+  ) async {
     final (profile, _) = await _pumpSettings(tester);
 
     await tester.tap(find.text('Dark'));
@@ -86,8 +92,9 @@ void main() {
     expect(find.text('What we collect'), findsOneWidget);
   });
 
-  testWidgets('delete account confirms, deletes, and returns to sign-in',
-      (tester) async {
+  testWidgets('delete account confirms, deletes, and returns to sign-in', (
+    tester,
+  ) async {
     final (profile, auth) = await _pumpSettings(tester);
 
     await tester.scrollUntilVisible(find.text('Delete account'), 200);

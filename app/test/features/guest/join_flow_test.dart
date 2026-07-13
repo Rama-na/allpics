@@ -1,7 +1,6 @@
 import 'package:allpics/app.dart';
 import 'package:allpics/features/auth/providers.dart';
 import 'package:allpics/features/guest/presentation/guest_event_screen.dart';
-import 'package:allpics/features/guest/presentation/join_event_screen.dart';
 import 'package:allpics/features/guest/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,12 +28,10 @@ Future<(FakeAuthRepository, FakeJoinRepository)> _pumpToJoin(
   await tester.pumpAndSettle();
   await tester.tap(find.text('Skip'));
   await tester.pumpAndSettle();
-  // Landing promotes joining to a first-class action.
-  await tester.ensureVisible(find.text('Join an event'));
-  await tester.pumpAndSettle();
+  // Camera home → slide to the in-shell Join page.
   await tester.tap(find.text('Join an event'));
   await tester.pumpAndSettle();
-  expect(find.byType(JoinEventScreen), findsOneWidget);
+  expect(find.text('Enter the event code'), findsOneWidget);
   return (auth, join);
 }
 
@@ -62,6 +59,12 @@ void main() {
     expect(find.textContaining("You're in, Anita!"), findsOneWidget);
     // Anonymous session was created for the guest.
     expect(auth.currentUser?.isAnonymous, isTrue);
+    // Guest→host growth loop CTA is present.
+    await tester.scrollUntilVisible(
+      find.text('Create your own event — free'),
+      300,
+    );
+    expect(find.text('Create your own event — free'), findsOneWidget);
     auth.dispose();
   });
 

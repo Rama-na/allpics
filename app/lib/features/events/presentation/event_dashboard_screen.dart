@@ -7,6 +7,7 @@ import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
+import '../../payments/presentation/widgets/keepsake_upsell_card.dart';
 import '../../payments/presentation/widgets/upgrade_sheet.dart';
 import '../domain/event.dart';
 import '../providers.dart';
@@ -266,6 +267,8 @@ class EventDashboardScreen extends ConsumerWidget {
                           ),
                           label: const Text('Upgrade plan'),
                         ),
+                      const SizedBox(height: AppSpacing.md),
+                      KeepsakeUpsellCard(event: event),
                       const SizedBox(height: AppSpacing.md),
                       QrShareCard(event: event),
                       if (event.description.isNotEmpty) ...[

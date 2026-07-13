@@ -2,7 +2,23 @@
 
 All notable changes to AllPics. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
-## [Unreleased] · Landing & onboarding UX overhaul
+## [Unreleased] · Camera-first shell, provisioning fix, pricing restructure
+
+### Fixed
+- **"Something went wrong" on create event**: hosted `supabase db push` never runs seed.sql, leaving `plans` empty (free-plan lookup PGRST116); accounts created before migrations lacked a `profiles` row (RLS 42501). New migration `0009_provisioning_backfill.sql` upserts the plan catalog + feature flags and backfills profiles, so plain `db push` fully provisions a project. Both failures now surface specific, actionable messages (`BackendNotProvisionedException`, profile guidance) instead of the generic catch-all.
+- Guest event screen no longer dead-ends on "enter your code again" after app restarts — it rehydrates membership from the backend.
+- Camera enumeration is bounded by a cancellable 4s timer (a wedged camera service no longer freezes the viewfinder), and leaving the camera releases the hardware.
+
+### Changed
+- **Camera-first home shell** (Snapchat grammar): the home is a horizontal PageView — My Events (hosted + joined, role/status chips, pull-to-refresh) ← **Camera** (full-bleed viewfinder posting into the active event, context chip + switcher) → Join (code entry). Open to hosts, guests, and signed-out visitors; with nothing to post into, the camera page invites Join/Create. Landing screen and the old host home are absorbed and deleted. Hosts self-join their event lazily on first post (uploads require a guest row).
+- **Plan catalog restructure — gate on time + keepsakes, not upload count**: Free ₹0 · 100 uploads · 7 days; Basic ₹199 · 500 · 30d; Plus ₹399 · 2000 · 90d + AI keepsakes; Premium ₹799 · 5000 · 365d. Free now survives a real party; paid tiers sell retention and memories. Current-plan detection uses `plan_id` instead of the photo-limit heuristic.
+
+### Added
+- **AI keepsakes surface**: the worker's highlights/slideshow pipeline (built since Phase 8 but never exposed) now has a dashboard card — locked with a Plus chip on free/basic, one-tap generate on Plus/Premium via the existing `enqueue_event_job` RPC.
+- **Guest→host growth loop**: "Create your own event — free" CTAs on the guest event screen and album footer, feeding the try-first wizard.
+- 8 new tests (139 total): shell navigation/unified list, provisioning error mappings, keepsake lock/enqueue paths, guest CTA.
+
+## [Previous unreleased] · Landing & onboarding UX overhaul
 
 ### Added
 - **Try-first landing screen** (`/landing`): action-first entry with "Join an event" and "Create an event — free" as equal CTAs, free-tier messaging ("10 uploads, 30 days, no card"), glass hero, and a secondary sign-in link. Onboarding carousel now shows exactly once (persisted via `FirstRunStore`); the app no longer dead-ends on the sign-in form.

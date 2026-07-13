@@ -13,10 +13,9 @@ import '../../features/events/presentation/create_event_screen.dart';
 import '../../features/events/presentation/event_dashboard_screen.dart';
 import '../../features/guest/presentation/guest_event_screen.dart';
 import '../../features/guest/presentation/join_event_screen.dart';
-import '../../features/home/presentation/home_screen.dart';
 import '../../features/capture/presentation/capture_screen.dart';
-import '../../features/onboarding/presentation/landing_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/shell/presentation/home_shell_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/payments/presentation/payment_history_screen.dart';
@@ -30,7 +29,6 @@ import 'go_router_refresh_stream.dart';
 abstract final class AppRoute {
   static const splash = 'splash';
   static const onboarding = 'onboarding';
-  static const landing = 'landing';
   static const capture = 'capture';
   static const signIn = 'signIn';
   static const signUp = 'signUp';
@@ -66,20 +64,17 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final isHost = user != null && user.isHost;
       final onAuthPages =
-          loc == '/signin' ||
-          loc == '/signup' ||
-          loc == '/onboarding' ||
-          loc == '/landing';
+          loc == '/signin' || loc == '/signup' || loc == '/onboarding';
 
-      // Signed-in hosts skip auth/onboarding/landing pages.
+      // Signed-in hosts skip auth/onboarding pages.
       if (isHost && onAuthPages) return '/home';
 
       // Host-only areas once a backend exists. In unconfigured mode the
       // shell stays reachable so UI development and tests never block.
-      // `/events/new` is deliberately open: anyone may draft an event and
-      // is asked to sign in only when they publish it (try-first flow).
+      // `/home` (the camera-first shell) and `/events/new` are deliberately
+      // open to everyone — guests and signed-out visitors try the app first
+      // and only meet sign-in when they publish an event.
       final hostOnly =
-          loc == '/home' ||
           (loc.startsWith('/events') && loc != '/events/new') ||
           loc.startsWith('/payments') ||
           loc.startsWith('/notifications') ||
@@ -100,11 +95,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         name: AppRoute.onboarding,
         builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(
-        path: '/landing',
-        name: AppRoute.landing,
-        builder: (context, state) => const LandingScreen(),
       ),
       GoRoute(
         path: '/signin',
@@ -137,7 +127,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         name: AppRoute.home,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const HomeShellScreen(),
       ),
       GoRoute(
         path: '/events/new',

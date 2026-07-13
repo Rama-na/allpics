@@ -109,7 +109,11 @@ class FakeJoinRepository implements JoinRepository {
     isFull: false,
   );
 
+  /// Memberships keyed by (auth uid, event id) — mirrors the real backend,
+  /// where a fresh anonymous session has no prior membership.
   final joined = <String, EventGuest>{};
+
+  String _key(String eventId) => '${auth?.currentUser?.id ?? 'anon'}:$eventId';
 
   @override
   Future<JoinableEvent> lookupEvent(String code) async {
@@ -132,13 +136,13 @@ class FakeJoinRepository implements JoinRepository {
       name: name.trim(),
       phone: phone,
     );
-    joined[eventId] = guest;
+    joined[_key(eventId)] = guest;
     return guest;
   }
 
   @override
   Future<EventGuest?> existingMembership(String eventId) async =>
-      joined[eventId];
+      joined[_key(eventId)];
 }
 
 /// In-memory [EventsRepository] with live stream semantics.
@@ -151,6 +155,9 @@ class FakeEventsRepository implements EventsRepository {
   final _listController = StreamController<List<Event>>.broadcast();
   int _nextId = 1;
   bool failWrites = false;
+
+  /// Events the fake user "joined as a guest" — settable per test.
+  List<Event> joinedEvents = [];
 
   List<Event> get _visible =>
       _events.values.where((e) => e.status != EventStatus.deleted).toList()
@@ -167,6 +174,8 @@ class FakeEventsRepository implements EventsRepository {
     int photoCount = 0,
     int videoCount = 0,
     int photoLimit = 10,
+    String? planId = 'p0',
+    DateTime? expiresAt,
   }) => Event(
     id: id,
     hostId: 'host-1',
@@ -178,18 +187,30 @@ class FakeEventsRepository implements EventsRepository {
     eventCode: 'K3XR7P',
     shareSlug: 'k3xr7p-abcd1234',
     photoLimit: photoLimit,
-    expiresAt: DateTime.now().add(const Duration(days: 30)),
+    expiresAt: expiresAt ?? DateTime.now().add(const Duration(days: 30)),
     guestCount: guestCount,
     photoCount: photoCount,
     videoCount: videoCount,
     bytesUsed: 0,
     createdAt: DateTime.now(),
+    planId: planId,
   );
 
   @override
   Stream<List<Event>> watchMyEvents() async* {
     yield _visible;
     yield* _listController.stream;
+  }
+
+  @override
+  Future<List<Event>> fetchJoinedEvents() async => List.of(joinedEvents);
+
+  /// (eventId, jobType) pairs queued via [enqueueKeepsakeJob].
+  final keepsakeJobs = <(String, String)>[];
+
+  @override
+  Future<void> enqueueKeepsakeJob(String eventId, String jobType) async {
+    keepsakeJobs.add((eventId, jobType));
   }
 
   @override
@@ -231,8 +252,10 @@ class FakeEventsRepository implements EventsRepository {
       location: draft.location.trim(),
       eventCode: 'CODE$_nextId'.padRight(6, 'X').substring(0, 6),
       shareSlug: 'code$_nextId-slug',
-      photoLimit: 10,
-      expiresAt: DateTime.now().add(const Duration(days: 30)),
+      // Free-plan defaults (mirrors trigger handle_new_event + catalog).
+      photoLimit: 100,
+      planId: 'p0',
+      expiresAt: DateTime.now().add(const Duration(days: 7)),
       guestCount: 0,
       photoCount: 0,
       videoCount: 0,
@@ -441,22 +464,23 @@ class FakePaymentsRepository implements PaymentsRepository {
   final orders = <(String eventId, String planCode)>[];
   List<Payment> history = [];
 
+  // Mirrors the production catalog (seed.sql / migration 0009).
   static const plans = [
     Plan(
       id: 'p0',
       code: 'free',
       name: 'Free',
       priceInr: 0,
-      photoLimit: 10,
-      storageDays: 30,
+      photoLimit: 100,
+      storageDays: 7,
       sortOrder: 0,
     ),
     Plan(
       id: 'p1',
       code: 'basic',
       name: 'Basic',
-      priceInr: 15900,
-      photoLimit: 100,
+      priceInr: 19900,
+      photoLimit: 500,
       storageDays: 30,
       sortOrder: 1,
     ),
@@ -464,18 +488,18 @@ class FakePaymentsRepository implements PaymentsRepository {
       id: 'p2',
       code: 'plus',
       name: 'Plus',
-      priceInr: 29900,
-      photoLimit: 500,
-      storageDays: 30,
+      priceInr: 39900,
+      photoLimit: 2000,
+      storageDays: 90,
       sortOrder: 2,
     ),
     Plan(
       id: 'p3',
       code: 'premium',
       name: 'Premium',
-      priceInr: 59900,
-      photoLimit: 1000,
-      storageDays: 180,
+      priceInr: 79900,
+      photoLimit: 5000,
+      storageDays: 365,
       sortOrder: 3,
     ),
   ];

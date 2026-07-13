@@ -125,7 +125,7 @@ class _AuthSheetBodyState extends ConsumerState<_AuthSheetBody> {
               Text(
                 _isSignUp
                     ? 'Create a free account to publish your event. '
-                        'Free plan included — 10 uploads, 30 days, no card.'
+                        'Free plan included — 100 uploads, 7 days, no card.'
                     : 'Sign in to publish your event.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,

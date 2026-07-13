@@ -98,7 +98,7 @@ void main() {
   );
 
   testWidgets('signed-in hosts never see the auth sheet', (tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
     final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
     final events = FakeEventsRepository();
     await tester.pumpWidget(
@@ -113,7 +113,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Create event'));
+    await tester.tap(find.text('Create an event — free'));
     await tester.pumpAndSettle();
     await _fillTitleAndSubmit(tester, 'Goa Trip');
 

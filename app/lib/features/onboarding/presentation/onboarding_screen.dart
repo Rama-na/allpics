@@ -29,7 +29,7 @@ const _pages = [
   _OnboardingPage(
     Icons.auto_awesome_rounded,
     'Free to try, upgrade anytime',
-    'Start free with 10 uploads for 30 days. Live gallery, AI highlights, '
+    'Start free with 100 uploads for 7 days. Live gallery, AI highlights, '
         'duplicates removed — download everything anytime.',
   ),
 ];
@@ -55,7 +55,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void _finish() {
     // Fire-and-forget: never block navigation on persistence.
     ref.read(firstRunStoreProvider).markOnboardingSeen();
-    context.goNamed(AppRoute.landing);
+    context.goNamed(AppRoute.home);
   }
 
   void _next() {

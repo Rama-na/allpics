@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/providers.dart';
 import '../../events/providers.dart';
+import '../domain/payment_models.dart';
 import '../providers.dart';
 import 'controllers/checkout_controller.dart';
 import 'widgets/plan_card.dart';
@@ -93,7 +94,13 @@ class PlansScreen extends ConsumerWidget {
         ),
         data: (plans) {
           final event = eventAsync.value;
-          final currentLimit = event?.photoLimit ?? 0;
+          // Prefer the authoritative plan id; fall back to the photo-limit
+          // heuristic for rows that predate `plan_id` parsing.
+          bool isCurrentPlan(Plan plan) => event == null
+              ? false
+              : event.planId != null
+                  ? plan.id == event.planId
+                  : plan.photoLimit == event.photoLimit;
           final sorted = [...plans]
             ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
           return ListView(
@@ -116,7 +123,7 @@ class PlansScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               ...sorted.map((plan) {
-                final isCurrent = plan.photoLimit == currentLimit;
+                final isCurrent = isCurrentPlan(plan);
                 final isProcessing =
                     checkout is CheckoutProcessing &&
                     checkout.planCode == plan.code;

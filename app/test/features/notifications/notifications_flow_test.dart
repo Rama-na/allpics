@@ -7,6 +7,7 @@ import 'package:allpics/features/notifications/presentation/notifications_screen
 import 'package:allpics/features/notifications/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -15,41 +16,50 @@ Future<FakeNotificationsRepository> _pumpHome(
   FakeNotificationsRepository? notifications,
   FakePushGateway? push,
 }) async {
+  SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
   final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
-  final events = FakeEventsRepository(initial: [
-    FakeEventsRepository.buildEvent(title: 'Goa Trip'),
-  ]);
+  final events = FakeEventsRepository(
+    initial: [FakeEventsRepository.buildEvent(title: 'Goa Trip')],
+  );
   final repo = notifications ?? FakeNotificationsRepository();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      eventsRepositoryProvider.overrideWithValue(events),
-      notificationsRepositoryProvider.overrideWithValue(repo),
-      if (push != null) pushGatewayProvider.overrideWithValue(push),
-    ],
-    child: const AllPicsApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        eventsRepositoryProvider.overrideWithValue(events),
+        notificationsRepositoryProvider.overrideWithValue(repo),
+        if (push != null) pushGatewayProvider.overrideWithValue(push),
+      ],
+      child: const AllPicsApp(),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 1700));
   await tester.pumpAndSettle();
   return repo;
 }
 
 void main() {
-  testWidgets('unread badge shows on home and clears after mark-all-read',
-      (tester) async {
-    final repo = FakeNotificationsRepository(initial: [
-      FakeNotificationsRepository.build(id: 'n1'),
-      FakeNotificationsRepository.build(
+  testWidgets('unread badge shows on home and clears after mark-all-read', (
+    tester,
+  ) async {
+    final repo = FakeNotificationsRepository(
+      initial: [
+        FakeNotificationsRepository.build(id: 'n1'),
+        FakeNotificationsRepository.build(
           id: 'n2',
           type: AppNotificationType.newUploads,
-          title: 'First photo is in! 📸'),
-      FakeNotificationsRepository.build(id: 'n3', read: true),
-    ]);
+          title: 'First photo is in! 📸',
+        ),
+        FakeNotificationsRepository.build(id: 'n3', read: true),
+      ],
+    );
     await _pumpHome(tester, notifications: repo);
 
     expect(find.text('2'), findsOneWidget); // badge
 
-    await tester.tap(find.byTooltip('Notifications'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
     expect(find.byType(NotificationsScreen), findsOneWidget);
     expect(find.text('Anita joined Goa Trip'), findsWidgets);
@@ -60,14 +70,17 @@ void main() {
     expect(find.text('Mark all read'), findsNothing);
   });
 
-  testWidgets('tapping a notification marks it read and opens the event',
-      (tester) async {
-    final repo = FakeNotificationsRepository(initial: [
-      FakeNotificationsRepository.build(id: 'n1'),
-    ]);
+  testWidgets('tapping a notification marks it read and opens the event', (
+    tester,
+  ) async {
+    final repo = FakeNotificationsRepository(
+      initial: [FakeNotificationsRepository.build(id: 'n1')],
+    );
     await _pumpHome(tester, notifications: repo);
 
-    await tester.tap(find.byTooltip('Notifications'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Anita joined Goa Trip'));
@@ -78,21 +91,27 @@ void main() {
 
   testWidgets('empty state renders', (tester) async {
     await _pumpHome(tester);
-    await tester.tap(find.byTooltip('Notifications'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
     expect(find.text('All caught up'), findsOneWidget);
   });
 
   testWidgets('swipe-to-dismiss deletes a notification', (tester) async {
-    final repo = FakeNotificationsRepository(initial: [
-      FakeNotificationsRepository.build(id: 'n1'),
-    ]);
+    final repo = FakeNotificationsRepository(
+      initial: [FakeNotificationsRepository.build(id: 'n1')],
+    );
     await _pumpHome(tester, notifications: repo);
-    await tester.tap(find.byTooltip('Notifications'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
 
     await tester.drag(
-        find.text('Anita joined Goa Trip'), const Offset(-500, 0));
+      find.text('Anita joined Goa Trip'),
+      const Offset(-500, 0),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('All caught up'), findsOneWidget);

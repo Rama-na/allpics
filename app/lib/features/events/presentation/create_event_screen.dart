@@ -154,11 +154,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
               );
               return;
             }
-            // Signed-out visitors came from the landing page; hosts from home.
-            final user = ref.read(currentUserProvider);
-            context.goNamed(
-              user != null && user.isHost ? AppRoute.home : AppRoute.landing,
-            );
+            // The shell is home for everyone, signed in or not.
+            context.goNamed(AppRoute.home);
           },
         ),
       ),
@@ -295,8 +292,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                     if (!widget.isEditing) ...[
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Starts on the Free plan (10 uploads, 30 days). '
-                        'Upgrade anytime.',
+                        'Starts on the Free plan (100 uploads, 7 days). '
+                        'Upgrade anytime to keep the album longer.',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

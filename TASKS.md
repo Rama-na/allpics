@@ -86,6 +86,17 @@
 - [x] Worker pytest suite
 - [x] RLS assertion tests (supabase/tests/verify_schema.sql — run post-migration)
 
+## v2 — Provisioning fix, camera-first shell, pricing restructure
+- [x] Migration 0009: plan catalog + feature flags in migrations (hosted `db push` self-provisions), profile backfill — fixes "Something went wrong" on create event
+- [x] Specific error surfacing for missing catalog / missing profile
+- [x] New catalog: Free ₹0 100/7d · Basic ₹199 500/30d · Plus ₹399 2000/90d + keepsakes · Premium ₹799 5000/365d
+- [x] Camera-first home shell (PageView: My Events ← Camera → Join), open to all; landing + old home deleted
+- [x] Unified hosted+joined events list (fetchJoinedEvents embed, role/status chips)
+- [x] Host lazy self-join for posting; guest event rehydration after restart
+- [x] AI keepsakes dashboard card (locked → plans; Plus/Premium → enqueue highlights/slideshow RPC)
+- [x] Guest→host CTAs (guest screen + album footer)
+- [x] `flutter analyze` clean · 139 tests green · release web build verified
+
 ## UX Overhaul — Try-first landing, camera, upgrade merchandising
 - [x] Landing screen with Join / Create-free CTAs + free-tier messaging; onboarding shown once (persisted flag)
 - [x] Deferred sign-up: create-event wizard open signed-out, auth sheet at publish

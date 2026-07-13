@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../auth/providers.dart';
 import '../providers.dart';
 
 /// Animated brand splash. Routes by session: signed-in hosts go straight to
@@ -35,14 +34,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     Future<void>.delayed(const Duration(milliseconds: 1600), () async {
       if (!mounted) return;
-      final user = ref.read(authRepositoryProvider).currentUser;
-      if (user != null && user.isHost) {
-        context.goNamed(AppRoute.home);
-        return;
-      }
       final seen = await ref.read(firstRunStoreProvider).hasSeenOnboarding();
       if (!mounted) return;
-      context.goNamed(seen ? AppRoute.landing : AppRoute.onboarding);
+      // Everyone lands on the camera-first shell; onboarding shows once.
+      context.goNamed(seen ? AppRoute.home : AppRoute.onboarding);
     });
   }
 

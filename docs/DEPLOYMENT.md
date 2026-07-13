@@ -12,9 +12,12 @@
    cd supabase
    supabase login
    supabase link --project-ref <PROJECT_REF>
-   supabase db push              # applies migrations
-   supabase db seed              # or run seed.sql in the SQL editor
+   supabase db push              # applies migrations (incl. plan catalog)
    ```
+   Migration `0009_provisioning_backfill.sql` provisions the plan catalog and
+   feature flags automatically, so plain `db push` is sufficient. (`seed.sql`
+   only runs on local `db reset`; use `supabase db push --include-seed` or the
+   SQL editor to re-apply it on a hosted project.)
 
 ### 2. Firebase
 1. Create a project at https://console.firebase.google.com.
@@ -145,7 +148,7 @@ schedule's Authorization header accordingly).
 1. **Supabase**: fill `app/env/dev.json` + `env/prod.json`; then
    `supabase link --project-ref <REF> && supabase db push && supabase functions deploy`;
    enable anonymous sign-ins; run `tests/verify_schema.sql` against the
-   project; seed plans via `seed.sql`.
+   project (plan catalog is provisioned by migration 0009 — no manual seeding).
 2. **Razorpay**: `supabase secrets set RAZORPAY_KEY_ID=… RAZORPAY_KEY_SECRET=… RAZORPAY_WEBHOOK_SECRET=…`;
    add the webhook endpoint (`payment.captured`, `payment.failed`).
 3. **Firebase**: drop `google-services.json` + `GoogleService-Info.plist`

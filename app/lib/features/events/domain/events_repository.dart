@@ -8,6 +8,10 @@ abstract interface class EventsRepository {
   /// deleted excluded). Emits on every counter change.
   Stream<List<Event>> watchMyEvents();
 
+  /// Events the current user joined as a guest (newest join first).
+  /// One-shot fetch — callers refresh via pull-to-refresh.
+  Future<List<Event>> fetchJoinedEvents();
+
   /// Live single event (dashboard counters).
   Stream<Event> watchEvent(String eventId);
 
@@ -31,4 +35,9 @@ abstract interface class EventsRepository {
 
   /// Short-lived signed URL for a private cover path.
   Future<String> signedCoverUrl(String coverPath);
+
+  /// Queues an AI keepsake job ('highlights' or 'slideshow') for an event
+  /// the caller hosts. Server-side dedup: re-queuing while one is pending
+  /// throws a [ValidationException].
+  Future<void> enqueueKeepsakeJob(String eventId, String jobType);
 }

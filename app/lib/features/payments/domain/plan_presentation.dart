@@ -16,11 +16,14 @@ extension PlanPresentation on Plan {
     return '₹$label/upload';
   }
 
+  /// Plans that include the AI keepsakes (highlights reel + slideshow).
+  bool get hasKeepsakes => code == 'plus' || code == 'premium';
+
   String get tagline => switch (code) {
-    'free' => 'Try it out with a small gathering',
+    'free' => 'A whole party, free — keep it 7 days',
     'basic' => 'Perfect for birthdays and small parties',
     'plus' => 'The sweet spot for weddings and big days',
-    'premium' => 'Every moment, kept for half a year',
+    'premium' => 'Every moment, kept for a full year',
     _ => '',
   };
 
@@ -29,7 +32,8 @@ extension PlanPresentation on Plan {
     'Album stays live for $storageLabel',
     'Unlimited guests, no guest accounts',
     'Videos up to 250 MB each',
-    if (code == 'premium') 'Extended 6-month storage',
-    if (!isFree) 'AI highlights, dedupe & slideshow',
+    if (!isFree) 'Full-resolution downloads & AI cleanup',
+    if (hasKeepsakes) 'AI highlights reel & slideshow',
+    if (code == 'premium') 'Priority processing',
   ];
 }
