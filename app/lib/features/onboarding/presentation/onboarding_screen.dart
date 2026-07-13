@@ -55,7 +55,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void _finish() {
     // Fire-and-forget: never block navigation on persistence.
     ref.read(firstRunStoreProvider).markOnboardingSeen();
-    context.goNamed(AppRoute.landing);
+    context.goNamed(AppRoute.home);
   }
 
   void _next() {

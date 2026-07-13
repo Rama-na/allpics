@@ -6,6 +6,7 @@ import 'package:allpics/features/events/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -13,21 +14,26 @@ Future<FakeAdminRepository> _pumpAdmin(
   WidgetTester tester, {
   bool admin = true,
 }) async {
+  SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
   final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
   final events = FakeEventsRepository();
   final repo = FakeAdminRepository(admin: admin);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      eventsRepositoryProvider.overrideWithValue(events),
-      adminRepositoryProvider.overrideWithValue(repo),
-    ],
-    child: const AllPicsApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        eventsRepositoryProvider.overrideWithValue(events),
+        adminRepositoryProvider.overrideWithValue(repo),
+      ],
+      child: const AllPicsApp(),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 1700));
   await tester.pumpAndSettle();
   if (admin) {
-    await tester.tap(find.byTooltip('Admin panel'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Admin panel'));
     await tester.pumpAndSettle();
     expect(find.byType(AdminScreen), findsOneWidget);
   }
@@ -35,10 +41,13 @@ Future<FakeAdminRepository> _pumpAdmin(
 }
 
 void main() {
-  testWidgets('non-admins get no entry icon and are denied in-screen',
-      (tester) async {
+  testWidgets('non-admins get no entry icon and are denied in-screen', (
+    tester,
+  ) async {
     await _pumpAdmin(tester, admin: false);
-    expect(find.byTooltip('Admin panel'), findsNothing);
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('Admin panel'), findsNothing);
   });
 
   testWidgets('overview tab shows platform stats', (tester) async {
@@ -69,8 +78,9 @@ void main() {
     expect(find.textContaining('BANNED'), findsOneWidget);
   });
 
-  testWidgets('events tab lists events and deletes with confirmation',
-      (tester) async {
+  testWidgets('events tab lists events and deletes with confirmation', (
+    tester,
+  ) async {
     final repo = await _pumpAdmin(tester);
 
     await tester.tap(find.text('Events'));
@@ -100,9 +110,6 @@ void main() {
     await tester.tap(find.byType(Switch).last); // virus_scan off → on
     await tester.pumpAndSettle();
 
-    expect(
-      repo.flags.firstWhere((f) => f.key == 'virus_scan').enabled,
-      isTrue,
-    );
+    expect(repo.flags.firstWhere((f) => f.key == 'virus_scan').enabled, isTrue);
   });
 }

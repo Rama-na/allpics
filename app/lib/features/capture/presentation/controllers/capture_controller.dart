@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -50,15 +51,14 @@ class CaptureState {
     int? cameraIndex,
     bool? canFlip,
     String? message,
-  }) =>
-      CaptureState(
-        status: status ?? this.status,
-        filterIndex: filterIndex ?? this.filterIndex,
-        flashMode: flashMode ?? this.flashMode,
-        cameraIndex: cameraIndex ?? this.cameraIndex,
-        canFlip: canFlip ?? this.canFlip,
-        message: message ?? this.message,
-      );
+  }) => CaptureState(
+    status: status ?? this.status,
+    filterIndex: filterIndex ?? this.filterIndex,
+    flashMode: flashMode ?? this.flashMode,
+    cameraIndex: cameraIndex ?? this.cameraIndex,
+    canFlip: canFlip ?? this.canFlip,
+    message: message ?? this.message,
+  );
 }
 
 /// Owns the [CameraController] lifecycle behind a Riverpod notifier so the
@@ -68,6 +68,7 @@ class CaptureController extends Notifier<CaptureState> {
 
   CameraController? _camera;
   List<CameraDescription> _cameras = const [];
+  Timer? _enumerationTimer;
 
   /// Live plugin controller for [CameraPreview]; null until ready.
   CameraController? get camera => _camera;
@@ -75,6 +76,7 @@ class CaptureController extends Notifier<CaptureState> {
   @override
   CaptureState build() {
     ref.onDispose(() {
+      _enumerationTimer?.cancel();
       _camera?.dispose();
       _camera = null;
     });
@@ -84,16 +86,43 @@ class CaptureController extends Notifier<CaptureState> {
   /// Releases the camera without disposing the notifier. The shell calls
   /// this when the viewfinder page is left (battery + iOS backgrounding).
   Future<void> shutdown() async {
+    _enumerationTimer?.cancel();
     final camera = _camera;
     _camera = null;
     state = const CaptureState();
     await camera?.dispose();
   }
 
+  /// Bounded camera enumeration: a wedged camera service (or a test
+  /// environment without the plugin, where the platform channel never
+  /// completes) must not leave the viewfinder spinning forever. The timer is
+  /// cancellable so tests can tear down without pending-timer failures.
+  Future<List<CameraDescription>> _enumerateCameras() {
+    final completer = Completer<List<CameraDescription>>();
+    _enumerationTimer?.cancel();
+    _enumerationTimer = Timer(const Duration(seconds: 4), () {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          TimeoutException('camera enumeration timed out'),
+        );
+      }
+    });
+    availableCameras()
+        .then((cameras) {
+          _enumerationTimer?.cancel();
+          if (!completer.isCompleted) completer.complete(cameras);
+        })
+        .catchError((Object e, StackTrace st) {
+          _enumerationTimer?.cancel();
+          if (!completer.isCompleted) completer.completeError(e, st);
+        });
+    return completer.future;
+  }
+
   Future<void> initialize() async {
     state = const CaptureState();
     try {
-      _cameras = await availableCameras();
+      _cameras = await _enumerateCameras();
     } catch (e) {
       _log.info('camera unavailable: $e');
       _cameras = const [];
@@ -131,7 +160,8 @@ class CaptureController extends Notifier<CaptureState> {
       await controller.dispose();
       state = state.copyWith(
         status: CaptureStatus.unavailable,
-        message: 'Could not start the camera. '
+        message:
+            'Could not start the camera. '
             'Check the camera permission and try again.',
       );
     }
@@ -163,12 +193,13 @@ class CaptureController extends Notifier<CaptureState> {
     );
   }
 
-  void nextFilter() => setFilterIndex(
-      (state.filterIndex + 1) % CaptureFilter.all.length);
+  void nextFilter() =>
+      setFilterIndex((state.filterIndex + 1) % CaptureFilter.all.length);
 
   void previousFilter() => setFilterIndex(
-      (state.filterIndex - 1 + CaptureFilter.all.length) %
-          CaptureFilter.all.length);
+    (state.filterIndex - 1 + CaptureFilter.all.length) %
+        CaptureFilter.all.length,
+  );
 
   /// Takes a photo and bakes the active filter in. Returns null on failure.
   Future<XFile?> takePhoto() async {
@@ -185,8 +216,7 @@ class CaptureController extends Notifier<CaptureState> {
       }
       // A real file gives the upload queue a stable name and lets the
       // offline queue persist the task across restarts.
-      final path =
-          '${Directory.systemTemp.path}${Platform.pathSeparator}$name';
+      final path = '${Directory.systemTemp.path}${Platform.pathSeparator}$name';
       await File(path).writeAsBytes(baked);
       return XFile(path, mimeType: 'image/png');
     } catch (e) {

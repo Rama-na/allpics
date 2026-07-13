@@ -154,11 +154,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
               );
               return;
             }
-            // Signed-out visitors came from the landing page; hosts from home.
-            final user = ref.read(currentUserProvider);
-            context.goNamed(
-              user != null && user.isHost ? AppRoute.home : AppRoute.landing,
-            );
+            // The shell is home for everyone, signed in or not.
+            context.goNamed(AppRoute.home);
           },
         ),
       ),

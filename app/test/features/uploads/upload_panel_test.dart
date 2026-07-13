@@ -35,9 +35,7 @@ Future<ProviderContainer> _pumpJoined(
   await tester.pumpAndSettle();
   await tester.tap(find.text('Skip'));
   await tester.pumpAndSettle();
-  // Landing promotes joining to a first-class action.
-  await tester.ensureVisible(find.text('Join an event'));
-  await tester.pumpAndSettle();
+  // Camera home → slide to the in-shell Join page.
   await tester.tap(find.text('Join an event'));
   await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextFormField), 'K3XR7P');

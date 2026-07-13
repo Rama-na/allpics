@@ -2,12 +2,11 @@ import 'package:allpics/app.dart';
 import 'package:allpics/core/router/app_router.dart';
 import 'package:allpics/features/auth/presentation/sign_in_screen.dart';
 import 'package:allpics/features/events/presentation/create_event_screen.dart';
-import 'package:allpics/features/guest/presentation/join_event_screen.dart';
 import 'package:allpics/features/onboarding/data/first_run_store.dart';
-import 'package:allpics/features/onboarding/presentation/landing_screen.dart';
 import 'package:allpics/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:allpics/features/onboarding/presentation/splash_screen.dart';
 import 'package:allpics/features/onboarding/providers.dart';
+import 'package:allpics/features/shell/presentation/home_shell_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,7 +36,7 @@ void main() {
     expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 
-  testWidgets('onboarding pages advance and land on the landing screen', (
+  testWidgets('onboarding pages advance and land on the camera shell', (
     tester,
   ) async {
     await _pumpApp(tester);
@@ -54,70 +53,68 @@ void main() {
 
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
-    expect(find.byType(LandingScreen), findsOneWidget);
+    expect(find.byType(HomeShellScreen), findsOneWidget);
   });
 
-  testWidgets('skip jumps straight to landing and persists the flag', (
+  testWidgets('skip jumps straight to the shell and persists the flag', (
     tester,
   ) async {
     await _pumpApp(tester);
 
     await tester.tap(find.text('Skip'));
     await tester.pumpAndSettle();
-    expect(find.byType(LandingScreen), findsOneWidget);
+    expect(find.byType(HomeShellScreen), findsOneWidget);
 
     expect(await const FirstRunStore().hasSeenOnboarding(), isTrue);
   });
 
-  testWidgets('returning visitor skips onboarding and lands on the landing', (
+  testWidgets('returning visitor skips onboarding and lands on the shell', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
     await _pumpApp(tester);
 
-    expect(find.byType(LandingScreen), findsOneWidget);
+    expect(find.byType(HomeShellScreen), findsOneWidget);
     expect(find.byType(OnboardingScreen), findsNothing);
   });
 
-  testWidgets('landing advertises the free tier and offers all three paths', (
+  testWidgets('camera home advertises the free tier and offers join/create', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
     await _pumpApp(tester);
 
+    // No events yet → the camera page invites join/create with free copy.
+    expect(find.text('Snap into an event'), findsOneWidget);
     expect(
-      find.text('Free to start — 10 uploads, 30 days. No card needed.'),
+      find.text('Free to start — 100 uploads, 7 days. No card needed.'),
       findsOneWidget,
     );
 
-    // Join an event → guest code entry, no account needed.
-    await tester.ensureVisible(find.text('Join an event'));
-    await tester.pumpAndSettle();
+    // Join an event → slides to the in-shell join page.
     await tester.tap(find.text('Join an event'));
     await tester.pumpAndSettle();
-    expect(find.byType(JoinEventScreen), findsOneWidget);
+    expect(find.text('Enter the event code'), findsOneWidget);
   });
 
-  testWidgets('landing create CTA opens the event wizard without sign-in', (
+  testWidgets('create CTA opens the event wizard without sign-in', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
     await _pumpApp(tester);
 
-    await tester.ensureVisible(find.text('Create an event — free'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Create an event — free'));
     await tester.pumpAndSettle();
     expect(find.byType(CreateEventScreen), findsOneWidget);
   });
 
-  testWidgets('landing sign-in link reaches the sign-in screen', (
+  testWidgets('profile menu reaches the sign-in screen when signed out', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
     await _pumpApp(tester);
 
-    await tester.ensureVisible(find.text('Sign in'));
+    await tester.tap(find.byTooltip('Profile'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
@@ -142,7 +139,6 @@ void main() {
     const names = [
       AppRoute.splash,
       AppRoute.onboarding,
-      AppRoute.landing,
       AppRoute.capture,
       AppRoute.signIn,
       AppRoute.signUp,

@@ -2,13 +2,14 @@ import 'package:allpics/app.dart';
 import 'package:allpics/features/auth/providers.dart';
 import 'package:allpics/features/events/presentation/event_dashboard_screen.dart';
 import 'package:allpics/features/events/providers.dart';
-import 'package:allpics/features/home/presentation/home_screen.dart';
 import 'package:allpics/features/payments/domain/plan_presentation.dart';
+import 'package:allpics/features/shell/presentation/home_shell_screen.dart';
 import 'package:allpics/features/payments/presentation/plans_screen.dart';
 import 'package:allpics/features/payments/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -16,6 +17,7 @@ Future<void> _pumpDashboard(
   WidgetTester tester, {
   required int photoCount,
 }) async {
+  SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
   final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
   final events = FakeEventsRepository(
     initial: [
@@ -37,6 +39,9 @@ Future<void> _pumpDashboard(
     ),
   );
   await tester.pump(const Duration(milliseconds: 1700));
+  await tester.pumpAndSettle();
+  // Shell → My Events page → dashboard.
+  await tester.tap(find.text('Events'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Goa Trip'));
   await tester.pumpAndSettle();
@@ -114,7 +119,9 @@ void main() {
     // Re-entering the dashboard does not re-fire the sheet this session.
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(HomeShellScreen), findsOneWidget);
+    await tester.tap(find.text('Events'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Goa Trip'));
     await tester.pumpAndSettle();
     expect(find.byType(EventDashboardScreen), findsOneWidget);

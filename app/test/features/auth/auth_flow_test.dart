@@ -1,7 +1,7 @@
 import 'package:allpics/app.dart';
 import 'package:allpics/features/auth/presentation/sign_in_screen.dart';
 import 'package:allpics/features/auth/providers.dart';
-import 'package:allpics/features/home/presentation/home_screen.dart';
+import 'package:allpics/features/shell/presentation/home_shell_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,10 +19,10 @@ Future<void> _pumpToSignIn(WidgetTester tester, FakeAuthRepository fake) async {
   );
   await tester.pump(const Duration(milliseconds: 1700));
   await tester.pumpAndSettle();
-  // Onboarding → landing → sign-in link.
+  // Onboarding → shell → profile menu → sign in.
   await tester.tap(find.text('Skip'));
   await tester.pumpAndSettle();
-  await tester.ensureVisible(find.text('Sign in'));
+  await tester.tap(find.byTooltip('Profile'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Sign in'));
   await tester.pumpAndSettle();
@@ -30,9 +30,7 @@ Future<void> _pumpToSignIn(WidgetTester tester, FakeAuthRepository fake) async {
 }
 
 void main() {
-  testWidgets('host signs in and lands on home with their name', (
-    tester,
-  ) async {
+  testWidgets('host signs in and lands on the shell', (tester) async {
     final fake = FakeAuthRepository();
     await _pumpToSignIn(tester, fake);
 
@@ -44,8 +42,7 @@ void main() {
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('Welcome, Test Host!'), findsOneWidget);
+    expect(find.byType(HomeShellScreen), findsOneWidget);
     fake.dispose();
   });
 
@@ -83,9 +80,10 @@ void main() {
     fake.dispose();
   });
 
-  testWidgets('existing host session skips onboarding entirely', (
+  testWidgets('returning host session lands straight on the shell', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
     final fake = FakeAuthRepository(initialUser: FakeAuthRepository.host);
     await tester.pumpWidget(
       ProviderScope(
@@ -96,7 +94,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle();
 
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(HomeShellScreen), findsOneWidget);
     fake.dispose();
   });
 

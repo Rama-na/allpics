@@ -53,18 +53,17 @@ void main() {
         ),
       );
 
-      // ---- 1. Splash → onboarding → landing (try-first, no account yet) ----
+      // ---- 1. Splash → onboarding → camera shell (try-first, no account) ----
       await tester.pump(const Duration(milliseconds: 1700));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
 
+      expect(find.text('Snap into an event'), findsOneWidget);
       expect(
-        find.text('Free to start — 10 uploads, 30 days. No card needed.'),
+        find.text('Free to start — 100 uploads, 7 days. No card needed.'),
         findsOneWidget,
       );
-      await tester.ensureVisible(find.text('Create an event — free'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Create an event — free'));
       await tester.pumpAndSettle();
 
@@ -101,7 +100,10 @@ void main() {
       // (Same app instance: the fake join repo recognizes the seeded code.)
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Settings'));
+      // Sign out via the shell's profile menu → settings.
+      await tester.tap(find.byTooltip('Profile'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.text('Sign out'), 200);
       await tester.pumpAndSettle();

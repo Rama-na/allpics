@@ -109,7 +109,11 @@ class FakeJoinRepository implements JoinRepository {
     isFull: false,
   );
 
+  /// Memberships keyed by (auth uid, event id) — mirrors the real backend,
+  /// where a fresh anonymous session has no prior membership.
   final joined = <String, EventGuest>{};
+
+  String _key(String eventId) => '${auth?.currentUser?.id ?? 'anon'}:$eventId';
 
   @override
   Future<JoinableEvent> lookupEvent(String code) async {
@@ -132,13 +136,13 @@ class FakeJoinRepository implements JoinRepository {
       name: name.trim(),
       phone: phone,
     );
-    joined[eventId] = guest;
+    joined[_key(eventId)] = guest;
     return guest;
   }
 
   @override
   Future<EventGuest?> existingMembership(String eventId) async =>
-      joined[eventId];
+      joined[_key(eventId)];
 }
 
 /// In-memory [EventsRepository] with live stream semantics.

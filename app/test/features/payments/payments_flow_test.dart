@@ -17,22 +17,30 @@ Future<(FakePaymentsRepository, FakeCheckoutGateway)> _pumpPlans(
   WidgetTester tester, {
   FakePaymentsRepository? payments,
 }) async {
+  SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
   final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
-  final events = FakeEventsRepository(initial: [
-    FakeEventsRepository.buildEvent(title: 'Goa Trip', photoLimit: 10),
-  ]);
+  final events = FakeEventsRepository(
+    initial: [
+      FakeEventsRepository.buildEvent(title: 'Goa Trip', photoLimit: 10),
+    ],
+  );
   final repo = payments ?? FakePaymentsRepository();
   final gateway = FakeCheckoutGateway();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      eventsRepositoryProvider.overrideWithValue(events),
-      paymentsRepositoryProvider.overrideWithValue(repo),
-      checkoutGatewayProvider.overrideWithValue(gateway),
-    ],
-    child: const AllPicsApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        eventsRepositoryProvider.overrideWithValue(events),
+        paymentsRepositoryProvider.overrideWithValue(repo),
+        checkoutGatewayProvider.overrideWithValue(gateway),
+      ],
+      child: const AllPicsApp(),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 1700));
+  await tester.pumpAndSettle();
+  // Shell → My Events page → dashboard.
+  await tester.tap(find.text('Events'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Goa Trip'));
   await tester.pumpAndSettle();
@@ -45,8 +53,9 @@ Future<(FakePaymentsRepository, FakeCheckoutGateway)> _pumpPlans(
 }
 
 void main() {
-  testWidgets('plans screen lists the catalog and marks the current plan',
-      (tester) async {
+  testWidgets('plans screen lists the catalog and marks the current plan', (
+    tester,
+  ) async {
     await _pumpPlans(tester);
 
     expect(find.text('Basic'), findsOneWidget);
@@ -61,8 +70,9 @@ void main() {
     expect(find.text('₹799'), findsOneWidget);
   });
 
-  testWidgets('successful checkout shows the success state and returns',
-      (tester) async {
+  testWidgets('successful checkout shows the success state and returns', (
+    tester,
+  ) async {
     final (repo, gateway) = await _pumpPlans(tester);
 
     await tester.scrollUntilVisible(find.text('Get Plus'), 300);
@@ -81,8 +91,9 @@ void main() {
     expect(find.byType(EventDashboardScreen), findsOneWidget);
   });
 
-  testWidgets('cancelled checkout surfaces a message and recovers',
-      (tester) async {
+  testWidgets('cancelled checkout surfaces a message and recovers', (
+    tester,
+  ) async {
     final (_, gateway) = await _pumpPlans(tester);
     gateway.next = const CheckoutResult.cancelled();
 
@@ -107,8 +118,9 @@ void main() {
     expect(find.text('Could not start the payment.'), findsOneWidget);
   });
 
-  testWidgets('payment history lists payments with invoice numbers',
-      (tester) async {
+  testWidgets('payment history lists payments with invoice numbers', (
+    tester,
+  ) async {
     final repo = FakePaymentsRepository()
       ..history = [
         Payment(
@@ -123,24 +135,28 @@ void main() {
         ),
       ];
     final auth = FakeAuthRepository(initialUser: FakeAuthRepository.host);
-    final events = FakeEventsRepository(initial: [
-      FakeEventsRepository.buildEvent(title: 'Goa Trip'),
-    ]);
-    SharedPreferences.setMockInitialValues({});
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(auth),
-        eventsRepositoryProvider.overrideWithValue(events),
-        paymentsRepositoryProvider.overrideWithValue(repo),
-        profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
-      ],
-      child: const AllPicsApp(),
-    ));
+    final events = FakeEventsRepository(
+      initial: [FakeEventsRepository.buildEvent(title: 'Goa Trip')],
+    );
+    SharedPreferences.setMockInitialValues({'allpics.onboarding_seen': true});
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(auth),
+          eventsRepositoryProvider.overrideWithValue(events),
+          paymentsRepositoryProvider.overrideWithValue(repo),
+          profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
+        ],
+        child: const AllPicsApp(),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle();
 
-    // Payment history lives under Settings.
-    await tester.tap(find.byTooltip('Settings'));
+    // Payment history lives under Settings (via the profile menu).
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Payment history'));
     await tester.pumpAndSettle();
