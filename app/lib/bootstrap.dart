@@ -22,6 +22,11 @@ Future<void> bootstrap() async {
       // Supports both legacy anon keys and new publishable keys.
       // ignore: deprecated_member_use
       anonKey: AppEnv.supabaseAnonKey,
+      // PKCE is the default, but the Google OAuth deep-link return
+      // (io.allpics.app://login-callback/) depends on it — keep explicit.
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+      ),
     );
     log.info('Supabase initialized (${AppEnv.environment})');
   } else {

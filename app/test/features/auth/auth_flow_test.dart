@@ -108,9 +108,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Create your account'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
     await tester.tap(find.text('Create account'));
     await tester.pumpAndSettle();
     expect(find.text('Name is required.'), findsOneWidget);
+    fake.dispose();
+  });
+
+  testWidgets('Google sign-up from the sign-up screen lands on the shell',
+      (tester) async {
+    final fake = FakeAuthRepository();
+    await _pumpToSignIn(tester, fake);
+
+    await tester.ensureVisible(find.text('Create one'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Create one'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Continue with Google'));
+    await tester.tap(find.text('Continue with Google'));
+    // Session arrives out-of-band via authStateChanges; router redirects.
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomeShellScreen), findsOneWidget);
     fake.dispose();
   });
 }

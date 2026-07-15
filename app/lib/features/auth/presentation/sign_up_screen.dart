@@ -32,6 +32,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.dispose();
   }
 
+  Future<void> _google() async {
+    await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    // Session lands via deep link; router redirect takes over.
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final result = await ref.read(authControllerProvider.notifier).signUp(
@@ -130,6 +135,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       label: 'Create account',
                       isLoading: isLoading,
                       onPressed: _submit,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppButton(
+                      label: 'Continue with Google',
+                      icon: Icons.g_mobiledata_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: isLoading ? null : _google,
                     ),
                   ],
                 ),

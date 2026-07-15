@@ -32,7 +32,7 @@ port = 54323
 
 [auth]
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000", "https://allpics.app"]
+additional_redirect_urls = ["https://127.0.0.1:3000", "https://allpics.app", "io.allpics.app://login-callback/"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 enable_signup = true
@@ -48,8 +48,8 @@ double_confirm_changes = true
 #   supabase secrets / dashboard in hosted projects; env() locally.
 [auth.external.google]
 enabled = false
-client_id = ""
-secret = ""
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
 
 [storage]
 enabled = true

@@ -24,6 +24,18 @@
 	<string>AllPics uses the microphone when recording videos for the event album.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<!-- OAuth deep-link return (Supabase Google sign-in). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>io.allpics.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.allpics.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>

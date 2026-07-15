@@ -28,6 +28,7 @@ class FakeAuthRepository implements AuthRepository {
   AuthUser? _current;
 
   bool failSignIn = false;
+  bool failGoogle = false;
   bool needsEmailConfirmation = false;
 
   static const host = AuthUser(
@@ -71,7 +72,12 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signInWithGoogle() async => _emit(host);
+  Future<void> signInWithGoogle() async {
+    if (failGoogle) {
+      throw const AuthException('Google sign-in was cancelled.');
+    }
+    _emit(host);
+  }
 
   @override
   Future<AuthUser> signInAnonymously() async {
