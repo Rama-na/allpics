@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/errors/app_exception.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../payments/presentation/widgets/keepsake_upsell_card.dart';
@@ -114,7 +115,13 @@ class EventDashboardScreen extends ConsumerWidget {
         _maybeNudgeUpgrade(context, ref, event);
         return Scaffold(
           appBar: AppBar(
-            title: Text(event.title),
+            title: Hero(
+              tag: 'event-title-${event.id}',
+              child: Material(
+                type: MaterialType.transparency,
+                child: Text(event.title, maxLines: 1),
+              ),
+            ),
             leading: BackButton(
               onPressed: () => context.goNamed(AppRoute.home),
             ),
@@ -352,7 +359,8 @@ class _QuotaBanner extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: ratio,
                 minHeight: 6,
-                color: foreground,
+                // Amber while approaching the limit, error red once full.
+                color: isFull ? foreground : AppColors.warning,
                 backgroundColor: foreground.withValues(alpha: 0.2),
               ),
             ),

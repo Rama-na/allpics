@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/upload_task.dart';
 
@@ -30,7 +31,7 @@ class UploadTaskTile extends StatelessWidget {
         ),
       UploadTaskStatus.success => (
           Icons.check_circle_rounded,
-          theme.colorScheme.primary
+          AppColors.success
         ),
       UploadTaskStatus.failed => (
           Icons.error_rounded,

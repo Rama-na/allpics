@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../domain/upload_task.dart';
@@ -140,17 +141,17 @@ class UploadPanel extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.check_circle_rounded,
                     size: 18,
-                    color: theme.colorScheme.primary,
+                    color: AppColors.success,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Flexible(
                     child: Text(
                       'All uploads complete. Thank you!',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
+                        color: AppColors.success,
                       ),
                     ),
                   ),

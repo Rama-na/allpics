@@ -1,4 +1,5 @@
 import 'package:allpics/shared/widgets/app_button.dart';
+import 'package:allpics/shared/widgets/app_chip.dart';
 import 'package:allpics/shared/widgets/shimmer.dart';
 import 'package:allpics/shared/widgets/state_views.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,29 @@ import 'package:flutter_test/flutter_test.dart';
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
+  group('AppChip', () {
+    testWidgets('renders label with optional icon', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const AppChip(label: 'Live', icon: Icons.circle)),
+      );
+      expect(find.text('Live'), findsOneWidget);
+      expect(find.byIcon(Icons.circle), findsOneWidget);
+    });
+
+    testWidgets('applies custom colors', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const AppChip(label: 'Host', background: Colors.teal)),
+      );
+      final container = tester.widget<Container>(
+        find.ancestor(
+          of: find.text('Host'),
+          matching: find.byType(Container),
+        ),
+      );
+      expect((container.decoration as BoxDecoration).color, Colors.teal);
+    });
+  });
+
   group('AppButton', () {
     testWidgets('fires onPressed when enabled', (tester) async {
       var pressed = false;

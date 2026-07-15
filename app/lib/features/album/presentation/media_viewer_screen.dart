@@ -127,9 +127,14 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
               onPageChanged: (i) => setState(() => _index = i),
               itemBuilder: (context, index) {
                 final item = widget.items[index];
+                // Only the initially-opened page participates in the Hero
+                // flight; sibling pages must not register the same tag.
+                final heroTag = index == widget.initialIndex
+                    ? 'media-${item.id}'
+                    : null;
                 return item.isVideo
                     ? _VideoView(item: item)
-                    : _PhotoView(item: item);
+                    : _PhotoView(item: item, heroTag: heroTag);
               },
             ),
           ),
@@ -170,9 +175,10 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
 }
 
 class _PhotoView extends ConsumerWidget {
-  const _PhotoView({required this.item});
+  const _PhotoView({required this.item, this.heroTag});
 
   final AlbumItem item;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -184,24 +190,42 @@ class _PhotoView extends ConsumerWidget {
         child: Icon(Icons.broken_image_outlined,
             color: Colors.white54, size: 48),
       ),
-      data: (url) => InteractiveViewer(
-        minScale: 1,
-        maxScale: 5,
-        child: Center(
-          child: Image.network(
-            url,
-            fit: BoxFit.contain,
-            loadingBuilder: (context, child, progress) => progress == null
-                ? child
-                : const Center(
-                    child: CircularProgressIndicator(color: Colors.white)),
-            errorBuilder: (_, _, _) => const Icon(
-                Icons.broken_image_outlined,
-                color: Colors.white54,
-                size: 48),
-          ),
-        ),
-      ),
+      data: (url) {
+        // Thumbnail (already cached by the grid) sits underneath so the Hero
+        // flight stays continuous while the full-res image fades in on top.
+        final thumbUrl = ref.watch(mediaUrlProvider(item.previewPath)).value;
+        Widget photo = Stack(
+          fit: StackFit.passthrough,
+          alignment: Alignment.center,
+          children: [
+            if (thumbUrl != null && item.previewPath != item.storagePath)
+              Image.network(thumbUrl, fit: BoxFit.contain),
+            Image.network(
+              url,
+              fit: BoxFit.contain,
+              frameBuilder: (context, child, frame, wasSync) => wasSync
+                  ? child
+                  : AnimatedOpacity(
+                      opacity: frame == null ? 0 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: child,
+                    ),
+              errorBuilder: (_, _, _) => const Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.white54,
+                  size: 48),
+            ),
+          ],
+        );
+        if (heroTag != null) {
+          photo = Hero(tag: heroTag!, child: photo);
+        }
+        return InteractiveViewer(
+          minScale: 1,
+          maxScale: 5,
+          child: Center(child: photo),
+        );
+      },
     );
   }
 }
