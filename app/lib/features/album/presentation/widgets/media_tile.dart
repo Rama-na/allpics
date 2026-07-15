@@ -39,22 +39,25 @@ class MediaTile extends ConsumerWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (imagePath == null)
-                Container(color: theme.colorScheme.surfaceContainerHighest)
-              else
-                ref
-                    .watch(mediaUrlProvider(imagePath))
-                    .when(
-                      data: (url) => Image.network(
-                        url,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) =>
-                            progress == null ? child : _placeholder(theme),
-                        errorBuilder: (_, _, _) => _broken(theme),
-                      ),
-                      loading: () => _placeholder(theme),
-                      error: (_, _) => _broken(theme),
-                    ),
+              // Shared-element flight into the media viewer.
+              Hero(
+                tag: 'media-${item.id}',
+                child: imagePath == null
+                    ? Container(color: theme.colorScheme.surfaceContainerHighest)
+                    : ref
+                        .watch(mediaUrlProvider(imagePath))
+                        .when(
+                          data: (url) => Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, progress) =>
+                                progress == null ? child : _placeholder(theme),
+                            errorBuilder: (_, _, _) => _broken(theme),
+                          ),
+                          loading: () => _placeholder(theme),
+                          error: (_, _) => _broken(theme),
+                        ),
+              ),
               if (item.isVideo)
                 Center(
                   child: Container(

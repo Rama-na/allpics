@@ -1,17 +1,30 @@
-# allpics
+# AllPics — Flutter app
 
-A new Flutter project.
+**Every Photo. One Album.** Android, iOS, and Web client. See the [repo root README](../README.md) for the monorepo overview.
 
-## Getting Started
+## Run
 
-This project is a starting point for a Flutter application.
+```sh
+flutter pub get
+flutter run --dart-define-from-file=env/dev.json
+```
 
-A few resources to get you started if this is your first Flutter project:
+`env/dev.json` is gitignored — copy `env/env.example.json` and fill in the Supabase project credentials. The app boots without credentials (backend features disabled).
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Verify
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+flutter analyze   # must be clean
+flutter test      # must be green
+```
+
+## Branding assets
+
+Source assets live in `assets/branding/`:
+
+| File | Used for | Regenerate with |
+|---|---|---|
+| `app_icon.png` (1024×1024) | Launcher icons (Android adaptive, iOS, web) | `dart run flutter_launcher_icons` |
+| `splash_logo.png` (white glyph, transparent) | Native + web splash screens | `dart run flutter_native_splash:create` |
+
+To rebrand: replace the PNG(s), run both commands above, then `cd ios && pod install`. Config lives in `pubspec.yaml` under `flutter_launcher_icons:` and `flutter_native_splash:` (brand violet `#6C5CE7`, dark `#0E0D12`).

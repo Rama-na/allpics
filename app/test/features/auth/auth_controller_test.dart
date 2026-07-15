@@ -58,6 +58,28 @@ void main() {
     expect(fake.currentUser, isNull);
   });
 
+  test('signInWithGoogle success clears error state and returns true',
+      () async {
+    final ok =
+        await container.read(authControllerProvider.notifier).signInWithGoogle();
+
+    expect(ok, isTrue);
+    expect(container.read(authControllerProvider).hasError, isFalse);
+    expect(fake.currentUser?.isHost, isTrue);
+  });
+
+  test('signInWithGoogle failure exposes AppException in state', () async {
+    fake.failGoogle = true;
+    final ok =
+        await container.read(authControllerProvider.notifier).signInWithGoogle();
+
+    expect(ok, isFalse);
+    final state = container.read(authControllerProvider);
+    expect(state.hasError, isTrue);
+    expect(state.error, isA<AuthException>());
+    expect(fake.currentUser, isNull);
+  });
+
   test('signOut clears the session', () async {
     await container
         .read(authControllerProvider.notifier)

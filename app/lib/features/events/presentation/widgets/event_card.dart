@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_chip.dart';
 import '../../domain/event.dart';
 import '../../providers.dart';
 
@@ -61,11 +62,18 @@ class EventCard extends ConsumerWidget {
                           size: 20, color: theme.colorScheme.primary),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: Text(
-                          event.title,
-                          style: theme.textTheme.titleLarge,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        // Flies into the dashboard app-bar title.
+                        child: Hero(
+                          tag: 'event-title-${event.id}',
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Text(
+                              event.title,
+                              style: theme.textTheme.titleLarge,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
                       ),
                       if (!event.isActive)
@@ -102,17 +110,17 @@ class EventCard extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
-                      _Chip(
+                      AppChip(
                         icon: Icons.people_outline_rounded,
                         label: '${event.guestCount}',
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      _Chip(
+                      AppChip(
                         icon: Icons.photo_library_outlined,
                         label: '${event.uploadsUsed}/${event.photoLimit}',
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      _Chip(
+                      AppChip(
                         icon: Icons.schedule_rounded,
                         label: '${event.daysUntilExpiry}d left',
                       ),
@@ -123,33 +131,6 @@ class EventCard extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 4),
-          Text(label, style: theme.textTheme.labelSmall),
-        ],
       ),
     );
   }

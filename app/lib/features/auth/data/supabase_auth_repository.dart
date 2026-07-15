@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/errors/app_exception.dart';
@@ -74,6 +75,9 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       await _auth.signInWithOAuth(
         sb.OAuthProvider.google,
+        // Mobile returns via the custom scheme (registered in Info.plist /
+        // AndroidManifest); web redirects back to the current origin.
+        redirectTo: kIsWeb ? null : 'io.allpics.app://login-callback/',
         authScreenLaunchMode: sb.LaunchMode.externalApplication,
       );
     } on sb.AuthException catch (e) {

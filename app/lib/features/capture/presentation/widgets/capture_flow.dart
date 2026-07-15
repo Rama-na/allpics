@@ -314,6 +314,14 @@ class _CameraView extends ConsumerWidget {
                     child: CameraPreview(camera),
                   ),
           ),
+        // Brief white flash while the photo is captured.
+        IgnorePointer(
+          child: AnimatedOpacity(
+            opacity: busy ? 0.55 : 0,
+            duration: const Duration(milliseconds: 90),
+            child: const ColoredBox(color: Colors.white),
+          ),
+        ),
         // Top bar: close, filter name, flash, flip.
         Positioned(
           top: 0,
@@ -426,7 +434,8 @@ class _CameraView extends ConsumerWidget {
 }
 
 /// The 76px Snapchat-style shutter: tap = photo, hold = video.
-class CaptureShutterButton extends StatelessWidget {
+/// Scales down while pressed for tactile feedback.
+class CaptureShutterButton extends StatefulWidget {
   const CaptureShutterButton({
     super.key,
     required this.busy,
@@ -443,32 +452,54 @@ class CaptureShutterButton extends StatelessWidget {
   final VoidCallback onStopVideo;
 
   @override
+  State<CaptureShutterButton> createState() => _CaptureShutterButtonState();
+}
+
+class _CaptureShutterButtonState extends State<CaptureShutterButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed != value) setState(() => _pressed = value);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
       label: 'Shutter — tap for photo, hold for video',
       child: GestureDetector(
-        onTap: busy ? null : onTakePhoto,
-        onLongPressStart: (_) => onStartVideo(),
-        onLongPressEnd: (_) => onStopVideo(),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 76,
-          height: 76,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isRecording ? Colors.redAccent : Colors.white,
-            border: Border.all(
-              color: isRecording ? Colors.red : Colors.white38,
-              width: 5,
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        onTap: widget.busy ? null : widget.onTakePhoto,
+        onLongPressStart: (_) => widget.onStartVideo(),
+        onLongPressEnd: (_) {
+          _setPressed(false);
+          widget.onStopVideo();
+        },
+        child: AnimatedScale(
+          scale: _pressed || widget.isRecording ? 0.88 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.isRecording ? Colors.redAccent : Colors.white,
+              border: Border.all(
+                color: widget.isRecording ? Colors.red : Colors.white38,
+                width: 5,
+              ),
             ),
+            child: widget.busy
+                ? const Padding(
+                    padding: EdgeInsets.all(22),
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  )
+                : null,
           ),
-          child: busy
-              ? const Padding(
-                  padding: EdgeInsets.all(22),
-                  child: CircularProgressIndicator(strokeWidth: 3),
-                )
-              : null,
         ),
       ),
     );

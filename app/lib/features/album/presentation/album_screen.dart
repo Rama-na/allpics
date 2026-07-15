@@ -172,48 +172,53 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
             ),
           ),
           Expanded(
-            child: itemsAsync.when(
-              loading: () => const SkeletonAlbumGrid(),
-              error: (error, _) => ErrorView(
-                message: error is AppException
-                    ? error.message
-                    : 'Could not load the album.',
-                onRetry: () =>
-                    ref.invalidate(albumItemsProvider(widget.eventId)),
-              ),
-              data: (items) {
-                final visible = view.apply(items, favorites);
-                if (visible.isEmpty) {
-                  return EmptyView(
-                    icon: Icons.photo_library_outlined,
-                    title: items.isEmpty ? 'No photos yet' : 'Nothing matches',
-                    subtitle: items.isEmpty
-                        ? 'Photos appear here live as guests upload them.'
-                        : 'Try a different search or filter.',
-                  );
-                }
-                return GridView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 140,
-                    mainAxisSpacing: AppSpacing.sm,
-                    crossAxisSpacing: AppSpacing.sm,
-                  ),
-                  itemCount: visible.length,
-                  itemBuilder: (context, index) {
-                    final item = visible[index];
-                    return MediaTile(
-                      item: item,
-                      isFavorite: favorites.contains(item.id),
-                      onTap: () => context.pushNamed(
-                        AppRoute.mediaViewer,
-                        pathParameters: {'eventId': widget.eventId},
-                        extra: (items: visible, initialIndex: index),
-                      ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: itemsAsync.when(
+                loading: () => const SkeletonAlbumGrid(),
+                error: (error, _) => ErrorView(
+                  message: error is AppException
+                      ? error.message
+                      : 'Could not load the album.',
+                  onRetry: () =>
+                      ref.invalidate(albumItemsProvider(widget.eventId)),
+                ),
+                data: (items) {
+                  final visible = view.apply(items, favorites);
+                  if (visible.isEmpty) {
+                    return EmptyView(
+                      icon: Icons.photo_library_outlined,
+                      title:
+                          items.isEmpty ? 'No photos yet' : 'Nothing matches',
+                      subtitle: items.isEmpty
+                          ? 'Photos appear here live as guests upload them.'
+                          : 'Try a different search or filter.',
                     );
-                  },
-                );
-              },
+                  }
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 140,
+                      mainAxisSpacing: AppSpacing.sm,
+                      crossAxisSpacing: AppSpacing.sm,
+                    ),
+                    itemCount: visible.length,
+                    itemBuilder: (context, index) {
+                      final item = visible[index];
+                      return MediaTile(
+                        item: item,
+                        isFavorite: favorites.contains(item.id),
+                        onTap: () => context.pushNamed(
+                          AppRoute.mediaViewer,
+                          pathParameters: {'eventId': widget.eventId},
+                          extra: (items: visible, initialIndex: index),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
           Padding(

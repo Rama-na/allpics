@@ -6,7 +6,9 @@ import '../../../../core/config/app_env.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/shimmer.dart';
+import '../../../../shared/widgets/staggered_entrance.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../../auth/providers.dart';
 import '../../../events/domain/my_event.dart';
@@ -80,41 +82,47 @@ class MyEventsPage extends ConsumerWidget {
               ),
             ),
           Expanded(
-            child: eventsAsync.when(
-              loading: () => const SkeletonEventList(),
-              error: (error, _) => ErrorView(
-                message: error is AppException
-                    ? error.message
-                    : 'Could not load your events.',
-                onRetry: () => ref.invalidate(myEventsShellProvider),
-              ),
-              data: (events) {
-                if (events.isEmpty) {
-                  return _EmptyEvents(signedIn: user != null && user.isHost);
-                }
-                return RefreshIndicator(
-                  onRefresh: () async =>
-                      ref.invalidate(myEventsShellProvider),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                      AppSpacing.md,
-                      120, // clear the shell bottom bar
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: eventsAsync.when(
+                loading: () => const SkeletonEventList(),
+                error: (error, _) => ErrorView(
+                  message: error is AppException
+                      ? error.message
+                      : 'Could not load your events.',
+                  onRetry: () => ref.invalidate(myEventsShellProvider),
+                ),
+                data: (events) {
+                  if (events.isEmpty) {
+                    return _EmptyEvents(signedIn: user != null && user.isHost);
+                  }
+                  return RefreshIndicator(
+                    onRefresh: () async =>
+                        ref.invalidate(myEventsShellProvider),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                        AppSpacing.md,
+                        120, // clear the shell bottom bar
+                      ),
+                      itemCount: events.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.md),
+                      itemBuilder: (context, index) {
+                        final item = events[index];
+                        return StaggeredEntrance(
+                          index: index,
+                          child: _MyEventTile(
+                            item: item,
+                            onTap: () => _open(context, item),
+                          ),
+                        );
+                      },
                     ),
-                    itemCount: events.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.md),
-                    itemBuilder: (context, index) {
-                      final item = events[index];
-                      return _MyEventTile(
-                        item: item,
-                        onTap: () => _open(context, item),
-                      );
-                    },
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -141,15 +149,13 @@ class _MyEventTile extends StatelessWidget {
           right: AppSpacing.sm,
           child: Row(
             children: [
-              _chip(
-                theme,
+              AppChip(
                 label: item.isHost ? 'Host' : 'Guest',
                 background: theme.colorScheme.secondaryContainer,
                 foreground: theme.colorScheme.onSecondaryContainer,
               ),
               const SizedBox(width: AppSpacing.xs),
-              _chip(
-                theme,
+              AppChip(
                 label: item.isLive ? 'Live' : 'Ended',
                 background: item.isLive
                     ? theme.colorScheme.primaryContainer
@@ -165,27 +171,6 @@ class _MyEventTile extends StatelessWidget {
     );
   }
 
-  Widget _chip(
-    ThemeData theme, {
-    required String label,
-    required Color background,
-    required Color foreground,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
 }
 
 class _EmptyEvents extends ConsumerWidget {
